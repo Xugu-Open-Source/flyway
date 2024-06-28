@@ -41,6 +41,8 @@ import org.flywaydb.core.internal.database.sqlserver.SQLServerDatabaseType;
 import org.flywaydb.core.internal.database.sqlserver.synapse.SynapseDatabaseType;
 import org.flywaydb.core.internal.database.sybasease.SybaseASEJConnectDatabaseType;
 import org.flywaydb.core.internal.database.sybasease.SybaseASEJTDSDatabaseType;
+import org.flywaydb.core.internal.database.sqlserver.synapse.SynapseDatabaseType;
+import org.flywaydb.core.internal.database.xugu.XuGuDatabaseType;
 import org.flywaydb.core.internal.jdbc.JdbcUtils;
 import org.flywaydb.core.internal.util.StringUtils;
 
@@ -91,6 +93,7 @@ public class DatabaseTypeRegister {
             registeredDatabaseTypes.add(new SQLServerDatabaseType());
             registeredDatabaseTypes.add(new SybaseASEJTDSDatabaseType());
             registeredDatabaseTypes.add(new SybaseASEJConnectDatabaseType());
+            registeredDatabaseTypes.add(new XuGuDatabaseType());
 
             registeredDatabaseTypes.add(new TestContainersDatabaseType());
 
