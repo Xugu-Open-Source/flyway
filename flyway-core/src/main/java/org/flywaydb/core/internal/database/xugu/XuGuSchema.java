@@ -41,27 +41,16 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
 
     @Override
     protected boolean doExists() throws SQLException {
-        return jdbcTemplate.queryForInt("SELECT (SELECT 1 FROM information_schema.schemata WHERE schema_name=? LIMIT 1)", name) > 0;
+        return jdbcTemplate.queryForInt("SELECT * FROM ALL_schemas WHERE schema_name = ?", name) > 0;
     }
 
     @Override
     protected boolean doEmpty() throws SQLException {
-        return !jdbcTemplate.queryForBoolean("SELECT EXISTS (\n" +
-                "    SELECT c.oid FROM pg_catalog.pg_class c\n" +
-                "    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace\n" +
-                "    LEFT JOIN pg_catalog.pg_depend d ON d.objid = c.oid AND d.deptype = 'e'\n" +
-                "    WHERE  n.nspname = ? AND d.objid IS NULL AND c.relkind IN ('r', 'v', 'S', 't')\n" +
-                "  UNION ALL\n" +
-                "    SELECT t.oid FROM pg_catalog.pg_type t\n" +
-                "    JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace\n" +
-                "    LEFT JOIN pg_catalog.pg_depend d ON d.objid = t.oid AND d.deptype = 'e'\n" +
-                "    WHERE n.nspname = ? AND d.objid IS NULL AND t.typcategory NOT IN ('A', 'C')\n" +
-                "  UNION ALL\n" +
-                "    SELECT p.oid FROM pg_catalog.pg_proc p\n" +
-                "    JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace\n" +
-                "    LEFT JOIN pg_catalog.pg_depend d ON d.objid = p.oid AND d.deptype = 'e'\n" +
-                "    WHERE n.nspname = ? AND d.objid IS NULL\n" +
-                ")", name, name, name);
+        return !jdbcTemplate.queryForBoolean("SELECT 1 FROM dual WHERE EXISTS (SELECT obj_id FROM all_objects \n" +
+                "WHERE obj_id NOT IN \n" +
+                "(SELECT so.obj_id FROM all_objects so \n" +
+                "JOIN all_depends sd ON so.obj_id=sd.obj_id1 OR so.obj_id=sd.obj_id2 AND so.db_id=sd.db_id) " +
+                "AND schema_id=(SELECT schema_id FROM all_schemas  WHERE schema_name=?));", name);
     }
 
     @Override
