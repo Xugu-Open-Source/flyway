@@ -1,18 +1,3 @@
-/*
- * Copyright © Red Gate Software Ltd 2010-2020
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.flywaydb.core.internal.database.xugu;
 
 import org.flywaydb.core.internal.database.base.Schema;
@@ -23,18 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-
-/**
- * MySQL implementation of Schema.
- */
 public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
-    /**
-     * Creates a new MySQL schema.
-     *
-     * @param jdbcTemplate The Jdbc Template for communicating with the DB.
-     * @param database     The database-specific support.
-     * @param name         The name of the schema.
-     */
     XuGuSchema(JdbcTemplate jdbcTemplate, XuGuDatabase database, String name) {
         super(jdbcTemplate, database, name);
     }
@@ -74,19 +48,11 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
             table.drop();
         }
 
-        // MariaDB 10.3 and newer only
         for (String statement : cleanSequences()) {
             jdbcTemplate.execute(statement);
         }
     }
 
-
-    /**
-     * Generate the statements to clean the views in this schema.
-     *
-     * @return The list of statements.
-     * @throws SQLException when the clean statements could not be generated.
-     */
     private List<String> cleanViews() throws SQLException {
         List<String> viewNames =
                 jdbcTemplate.queryForStringList(
@@ -99,12 +65,6 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
         return statements;
     }
 
-    /**
-     * Generate the statements to clean the sequences in this schema.
-     *
-     * @return The list of statements.
-     * @throws SQLException when the clean statements could not be generated.
-     */
     private List<String> cleanSequences() throws SQLException {
         List<String> names =
                 jdbcTemplate.queryForStringList(
