@@ -1,53 +1,30 @@
-/*
- * Copyright © Red Gate Software Ltd 2010-2020
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.flywaydb.core.internal.database.xugu;
 
-import org.flywaydb.core.api.FlywayException;
-import org.flywaydb.core.api.MigrationType;
-import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.configuration.Configuration;
-import org.flywaydb.core.api.logging.Log;
-import org.flywaydb.core.api.logging.LogFactory;
 import org.flywaydb.core.internal.database.base.Database;
-import org.flywaydb.core.internal.database.base.DatabaseType;
 import org.flywaydb.core.internal.database.base.Table;
-import org.flywaydb.core.internal.database.mysql.mariadb.MariaDBDatabaseType;
-import org.flywaydb.core.internal.exception.FlywaySqlException;
 import org.flywaydb.core.internal.jdbc.JdbcConnectionFactory;
-import org.flywaydb.core.internal.jdbc.JdbcTemplate;
 import org.flywaydb.core.internal.jdbc.StatementInterceptor;
-
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-/**
- * MySQL database.
- */
 public class XuGuDatabase extends Database<XuGuConnection> {
-    // See https://mariadb.com/kb/en/version/
-
-    /**
-     * Creates a new instance.
-     *
-     * @param configuration The Flyway configuration.
-     */
     public XuGuDatabase(Configuration configuration, JdbcConnectionFactory jdbcConnectionFactory, StatementInterceptor statementInterceptor) {
         super(configuration, jdbcConnectionFactory, statementInterceptor);
+    }
+
+    @Override
+    protected XuGuConnection doGetConnection(Connection connection) {
+        return new XuGuConnection(this, connection);
+    }
+
+    @Override
+    public final void ensureSupported() {
+        ensureDatabaseIsRecentEnough("11");
+
+        ensureDatabaseNotOlderThanOtherwiseRecommendUpgradeToFlywayEdition("11.0", org.flywaydb.core.internal.license.Edition.ENTERPRISE);
+
+        recommendFlywayUpgradeIfNecessary("12.0");
     }
 
     @Override
@@ -66,7 +43,7 @@ public class XuGuDatabase extends Database<XuGuConnection> {
                 "    \"installed_by\" VARCHAR2(100) NOT NULL,\n" +
                 "    \"installed_on\" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n" +
                 "    \"execution_time\" INT NOT NULL,\n" +
-                "    \"success\" NUMBER(1) NOT NULL,\n" +
+                "    \"success\" boolean NOT NULL,\n" +
                 "    CONSTRAINT \"" + table.getName() + "_pk\" PRIMARY KEY (\"installed_rank\")\n" +
                 ")" + tablespace + ";\n" +
                 (baseline ? getBaselineStatement(table) + ";\n" : "") +
@@ -74,17 +51,13 @@ public class XuGuDatabase extends Database<XuGuConnection> {
     }
 
     @Override
-    protected XuGuConnection doGetConnection(Connection connection) {
-        return new XuGuConnection(this, connection);
+    public boolean supportsEmptyMigrationDescription() {
+        return false;
     }
 
     @Override
-    public final void ensureSupported() {
-        ensureDatabaseIsRecentEnough("11");
-
-        ensureDatabaseNotOlderThanOtherwiseRecommendUpgradeToFlywayEdition("11.0", org.flywaydb.core.internal.license.Edition.ENTERPRISE);
-
-        recommendFlywayUpgradeIfNecessary("12.0");
+    protected String doGetCatalog() throws SQLException {
+        return getMainConnection().getJdbcTemplate().queryForString("SELECT database FROM dual");
     }
 
     @Override
@@ -119,6 +92,6 @@ public class XuGuDatabase extends Database<XuGuConnection> {
 
     @Override
     public boolean catalogIsSchema() {
-        return true;
+        return false;
     }
 }
