@@ -65,7 +65,7 @@ public class XuGuDatabaseType extends DatabaseType {
 
     @Override
     public boolean handlesDatabaseProductNameAndVersion(String databaseProductName, String databaseProductVersion, Connection connection) {
-        return databaseProductName.contains("XuGu");
+        return databaseProductName.contains("XuG") || databaseProductName.contains("XuguDB");
     }
 
     @Override
