@@ -35,11 +35,11 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
 
     @Override
     protected boolean doEmpty() throws SQLException {
-        return !jdbcTemplate.queryForBoolean("SELECT 1 FROM dual WHERE EXISTS (SELECT obj_id FROM all_objects \n" +
+        return jdbcTemplate.queryForInt("SELECT COUNT(*) FROM (SELECT obj_id FROM all_objects \n" +
                 "WHERE obj_id NOT IN \n" +
                 "(SELECT so.obj_id FROM all_objects so \n" +
                 "JOIN all_depends sd ON so.obj_id=sd.obj_id1 OR so.obj_id=sd.obj_id2 AND so.db_id=sd.db_id) " +
-                "AND schema_id=(SELECT schema_id FROM all_schemas  WHERE schema_name=?));", name);
+                "AND schema_id=(SELECT schema_id FROM all_schemas  WHERE schema_name=?));", name)==0;
     }
 
     @Override
