@@ -31,7 +31,7 @@ public class XuGuTable extends Table<XuGuDatabase, XuGuSchema> {
 
     @Override
     protected boolean doExists() throws SQLException {
-        return exists(schema, null, name);
+        return exists(null, schema, name);
     }
 
     @Override
