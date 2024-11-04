@@ -74,7 +74,7 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
 
     private List<String> generateDropProcedureStatements() throws SQLException {
         List<String> procedureNames = jdbcTemplate.queryForStringList(
-                "SELECT  proc_name FROM ALL_PROCEDURES");
+                "SELECT  proc_name FROM ALL_PROCEDURES WHERE schema_id=(SELECT schema_id FROM all_schemas WHERE schema_name=?);", name);
         return generateDropStatements("procedure", procedureNames);
     }
 
