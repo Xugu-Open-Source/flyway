@@ -91,4 +91,9 @@ public class XuGuDatabaseType extends DatabaseType {
     public boolean detectPasswordRequiredByUrl(String url) {
         return super.detectPasswordRequiredByUrl(url);
     }
+
+    @Override
+    public boolean externalAuthPropertiesRequired(String url, String username, String password) {
+        return super.externalAuthPropertiesRequired(url, username, password);
+    }
 }
