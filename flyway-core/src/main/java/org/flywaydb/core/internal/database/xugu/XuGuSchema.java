@@ -59,6 +59,10 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
             jdbcTemplate.execute(statement);
         }
 
+        for (String dropProcedureStmt : generateDropProcedureStatements()) {
+            jdbcTemplate.execute(dropProcedureStmt);
+        }
+
         for (Table table : allTables()) {
             table.drop();
         }
@@ -66,6 +70,20 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
         for (String statement : cleanSequences()) {
             jdbcTemplate.execute(statement);
         }
+    }
+
+    private List<String> generateDropProcedureStatements() throws SQLException {
+        List<String> procedureNames = jdbcTemplate.queryForStringList(
+                "SELECT  proc_name FROM ALL_PROCEDURES");
+        return generateDropStatements("procedure", procedureNames);
+    }
+
+    private List<String> generateDropStatements(String objectType, List<String> objectNames) {
+        List<String> statements = new ArrayList<>(objectNames.size());
+        for (String objectName : objectNames) {
+            statements.add("drop " + objectType + " " + database.quote(objectName));
+        }
+        return statements;
     }
 
     private List<String> cleanViews() throws SQLException {
