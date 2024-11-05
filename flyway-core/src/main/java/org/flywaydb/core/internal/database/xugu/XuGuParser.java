@@ -153,7 +153,7 @@ public class XuGuParser extends Parser {
     }
 
     @Override
-    protected boolean shouldAdjustBlockDepth(ParserContext context, Token token) {
+    protected boolean shouldAdjustBlockDepth(ParserContext context,List<Token> tokens,Token token) {
         // Package bodies can have an unbalanced BEGIN without END in the initialisation section.
         TokenType tokenType = token.getType();
         if (context.getStatementType() == PLSQL_PACKAGE_BODY_STATEMENT && (TokenType.EOF == tokenType || TokenType.DELIMITER == tokenType)) {
@@ -168,7 +168,7 @@ public class XuGuParser extends Parser {
         if (token.getType() == TokenType.SYMBOL && context.getStatementType() == PLSQL_JAVA_STATEMENT) {
             return true;
         }
-        return super.shouldAdjustBlockDepth(context, token);
+        return super.shouldAdjustBlockDepth(context,tokens,token);
     }
 
     // These words increase the block depth - unless preceded by END (in which case the END will decrease the block depth)
