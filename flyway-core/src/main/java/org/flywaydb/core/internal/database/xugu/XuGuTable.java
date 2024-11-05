@@ -26,7 +26,7 @@ public class XuGuTable extends Table<XuGuDatabase, XuGuSchema> {
 
     @Override
     protected void doDrop() throws SQLException {
-        jdbcTemplate.execute("DROP TABLE " + database.quote(schema.getName(), name));
+        jdbcTemplate.execute("DROP TABLE " + database.quote(schema.getName(), name)+ " CASCADE");
     }
 
     @Override
