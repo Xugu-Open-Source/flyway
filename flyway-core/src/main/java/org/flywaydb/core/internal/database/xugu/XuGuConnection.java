@@ -15,11 +15,13 @@
  */
 package org.flywaydb.core.internal.database.xugu;
 
+import lombok.CustomLog;
 import org.flywaydb.core.internal.database.base.Connection;
 import org.flywaydb.core.internal.database.base.Schema;
 
 import java.sql.SQLException;
 
+@CustomLog
 public class XuGuConnection extends Connection<XuGuDatabase> {
     XuGuConnection(XuGuDatabase database, java.sql.Connection connection) {
         super(database, connection);
