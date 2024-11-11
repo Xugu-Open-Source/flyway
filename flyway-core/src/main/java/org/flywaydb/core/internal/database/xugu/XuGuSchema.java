@@ -58,9 +58,6 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
         for (String statement : cleanViews()) {
             jdbcTemplate.execute(statement);
         }
-        for (String statement : generateDropTypeStatements()) {
-            jdbcTemplate.execute(statement);
-        }
 
         for (String dropProcedureStmt : generateDropProcedureStatements()) {
             jdbcTemplate.execute(dropProcedureStmt);
@@ -68,6 +65,10 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
 
         for (Table table : allTables()) {
             table.drop();
+        }
+
+        for (String statement : generateDropTypeStatements()) {
+            jdbcTemplate.execute(statement);
         }
 
         for (String statement : cleanSequences()) {
