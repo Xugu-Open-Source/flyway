@@ -39,7 +39,7 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
                 "WHERE obj_id NOT IN \n" +
                 "(SELECT so.obj_id FROM all_objects so \n" +
                 "JOIN all_depends sd ON so.obj_id=sd.obj_id1 OR so.obj_id=sd.obj_id2 AND so.db_id=sd.db_id) " +
-                "AND schema_id=(SELECT schema_id FROM all_schemas  WHERE schema_name=?));", name)==0;
+                "AND schema_id=(SELECT schema_id FROM all_schemas  WHERE schema_name=?));", name) == 0;
     }
 
     @Override
@@ -58,6 +58,9 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
         for (String statement : cleanViews()) {
             jdbcTemplate.execute(statement);
         }
+        for (String statement : generateDropTypeStatements()) {
+            jdbcTemplate.execute(statement);
+        }
 
         for (String dropProcedureStmt : generateDropProcedureStatements()) {
             jdbcTemplate.execute(dropProcedureStmt);
@@ -70,6 +73,16 @@ public class XuGuSchema extends Schema<XuGuDatabase, XuGuTable> {
         for (String statement : cleanSequences()) {
             jdbcTemplate.execute(statement);
         }
+    }
+
+    private List<String> generateDropTypeStatements() throws SQLException {
+        List<String> procedureNames = jdbcTemplate.queryForStringList(
+                "SELECT type_name FROM ALL_TYPES WHERE schema_id = (SELECT schema_id FROM all_schemas WHERE schema_name=?);", name);
+        List<String> statements = new ArrayList<>();
+        for (String typeName : procedureNames) {
+            statements.add("DROP TYPE " + database.quote(name, typeName));
+        }
+        return statements;
     }
 
     private List<String> generateDropProcedureStatements() throws SQLException {
