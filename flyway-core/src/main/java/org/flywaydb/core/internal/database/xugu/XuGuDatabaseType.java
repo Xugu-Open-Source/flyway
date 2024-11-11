@@ -15,6 +15,7 @@
  */
 package org.flywaydb.core.internal.database.xugu;
 
+import lombok.CustomLog;
 import org.flywaydb.core.api.ResourceProvider;
 import org.flywaydb.core.api.configuration.Configuration;
 import org.flywaydb.core.internal.database.base.BaseDatabaseType;
@@ -28,7 +29,7 @@ import org.flywaydb.core.internal.util.ClassUtils;
 import java.sql.Connection;
 import java.sql.Types;
 import java.util.Properties;
-
+@CustomLog
 public class XuGuDatabaseType extends BaseDatabaseType {
     private static final String XUGU_LEGACY_JDBC_DRIVER = "com.xugu.cloudjdbc.Driver";
 
