@@ -17,6 +17,7 @@ package org.flywaydb.core.internal.database.xugu;
 
 import org.flywaydb.core.internal.database.base.Table;
 import org.flywaydb.core.internal.jdbc.JdbcTemplate;
+
 import java.sql.SQLException;
 
 public class XuGuTable extends Table<XuGuDatabase, XuGuSchema> {
@@ -26,7 +27,7 @@ public class XuGuTable extends Table<XuGuDatabase, XuGuSchema> {
 
     @Override
     protected void doDrop() throws SQLException {
-        jdbcTemplate.execute("DROP TABLE " + database.quote(schema.getName(), name)+ " CASCADE");
+        jdbcTemplate.execute("DROP TABLE " + database.quote(schema.getName(), name) + " CASCADE");
     }
 
     @Override

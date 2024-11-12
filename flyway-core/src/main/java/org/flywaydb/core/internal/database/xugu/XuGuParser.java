@@ -72,6 +72,7 @@ public class XuGuParser extends Parser {
     private static String toRegexPattern(String... commands) {
         return "^(" + StringUtils.arrayToDelimitedString("|", commands) + ")";
     }
+
     public XuGuParser(Configuration configuration, ParsingContext parsingContext
     ) {
         super(configuration, parsingContext, 3);
@@ -83,7 +84,6 @@ public class XuGuParser extends Parser {
                                                  int nonCommentPartPos, int nonCommentPartLine, int nonCommentPartCol,
                                                  StatementType statementType, boolean canExecuteInTransaction,
                                                  Delimiter delimiter, String sql
-
 
 
     ) throws IOException {
@@ -99,7 +99,6 @@ public class XuGuParser extends Parser {
         return super.createStatement(reader, recorder, statementPos, statementLine, statementCol,
                 nonCommentPartPos, nonCommentPartLine, nonCommentPartCol,
                 statementType, canExecuteInTransaction, delimiter, sql
-
 
 
         );
@@ -125,7 +124,7 @@ public class XuGuParser extends Parser {
                 || DECLARE_BEGIN_REGEX.matcher(simplifiedStatement).matches()) {
             try {
                 String wrappedKeyword = " WRAPPED";
-                if(!reader.peek(wrappedKeyword.length()).equalsIgnoreCase(wrappedKeyword)) {
+                if (!reader.peek(wrappedKeyword.length()).equalsIgnoreCase(wrappedKeyword)) {
                     return PLSQL_STATEMENT;
                 }
             } catch (IOException e) {
@@ -140,7 +139,7 @@ public class XuGuParser extends Parser {
         if (PLSQL_VIEW_REGEX.matcher(simplifiedStatement).matches()) {
             return PLSQL_VIEW_STATEMENT;
         }
-        return super.detectStatementType(simplifiedStatement, context,reader);
+        return super.detectStatementType(simplifiedStatement, context, reader);
     }
 
     @Override
@@ -156,15 +155,13 @@ public class XuGuParser extends Parser {
             context.setDelimiter(PLSQL_DELIMITER);
 
 
-
-
         } else {
             context.setDelimiter(Delimiter.SEMICOLON);
         }
     }
 
     @Override
-    protected boolean shouldAdjustBlockDepth(ParserContext context,List<Token> tokens,Token token) {
+    protected boolean shouldAdjustBlockDepth(ParserContext context, List<Token> tokens, Token token) {
         // Package bodies can have an unbalanced BEGIN without END in the initialisation section.
         TokenType tokenType = token.getType();
         if (context.getStatementType() == PLSQL_PACKAGE_BODY_STATEMENT && (TokenType.EOF == tokenType || TokenType.DELIMITER == tokenType)) {
@@ -179,14 +176,14 @@ public class XuGuParser extends Parser {
         if (token.getType() == TokenType.SYMBOL && context.getStatementType() == PLSQL_JAVA_STATEMENT) {
             return true;
         }
-        return super.shouldAdjustBlockDepth(context,tokens,token);
+        return super.shouldAdjustBlockDepth(context, tokens, token);
     }
 
     // These words increase the block depth - unless preceded by END (in which case the END will decrease the block depth)
     private static final List<String> CONTROL_FLOW_KEYWORDS = Arrays.asList("IF", "LOOP", "CASE");
 
     @Override
-    protected void adjustBlockDepth(ParserContext context, List<Token> tokens, Token keyword, PeekingReader reader){
+    protected void adjustBlockDepth(ParserContext context, List<Token> tokens, Token keyword, PeekingReader reader) {
         TokenType tokenType = keyword.getType();
         String keywordText = keyword.getText();
 
@@ -236,7 +233,7 @@ public class XuGuParser extends Parser {
                 || doTokensMatchPattern(tokens, keyword, PLSQL_TYPE_BODY_REGEX)
         ) {
             context.increaseBlockDepth(keywordText);
-        } else if ("END".equals(keywordText) ) {
+        } else if ("END".equals(keywordText)) {
             context.decreaseBlockDepth();
         }
 
