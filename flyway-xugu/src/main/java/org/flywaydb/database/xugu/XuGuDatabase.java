@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.flywaydb.core.internal.database.xugu;
+package org.flywaydb.database.xugu;
 
 import lombok.CustomLog;
 import org.flywaydb.core.api.configuration.Configuration;
