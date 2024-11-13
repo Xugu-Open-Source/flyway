@@ -145,6 +145,7 @@
                 <include>org.flywaydb:flyway-gcsm-integration</include>
                 <include>org.flywaydb:flyway-sqlserver</include>
                 <include>org.flywaydb:flyway-mysql</include>
+                <include>org.flywaydb:flyway-xugu</include>
             </includes>
         </dependencySet>
 
