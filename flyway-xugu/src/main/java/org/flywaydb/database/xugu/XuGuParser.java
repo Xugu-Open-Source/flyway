@@ -258,7 +258,7 @@ public class XuGuParser extends Parser {
     }
 
     @Override
-    protected boolean isDelimiter(String peek, ParserContext context, int col, int colIgnoringWhitepace) {
+    protected boolean isDelimiter(String peek, ParserContext context, int col, int colIgnoringWhitespace) {
         Delimiter delimiter = context.getDelimiter();
 
         if (peek.startsWith(delimiter.getEscape() + delimiter.getDelimiter())) {
@@ -268,20 +268,20 @@ public class XuGuParser extends Parser {
         if (delimiter.shouldBeAloneOnLine()) {
             // Only consider alone-on-line delimiters (such as "/" for PL/SQL) if
             // it's the first character on the line
-            if (colIgnoringWhitepace == 1 && peek == delimiter.getDelimiter()) {
+            if (colIgnoringWhitespace == 1 && peek == delimiter.getDelimiter()) {
                 return true;
             }
 
-            if (colIgnoringWhitepace != 1) {
+            if (colIgnoringWhitespace != 1) {
                 return false;
             }
         } else {
-            if (colIgnoringWhitepace == 1 && "/".equals(peek.trim())) {
+            if (colIgnoringWhitespace == 1 && "/".equals(peek.trim())) {
                 return true;
             }
         }
 
-        return super.isDelimiter(peek, context, col, colIgnoringWhitepace);
+        return super.isDelimiter(peek, context, col, colIgnoringWhitespace);
     }
 
     @Override
