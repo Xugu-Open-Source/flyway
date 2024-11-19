@@ -36,6 +36,7 @@
         <flyway-mysql.version>${project.version}</flyway-mysql.version>
         <flyway-firebird.version>${project.version}</flyway-firebird.version>
         <jre.version>11.0.16</jre.version>
+        <flyway-xugu.version>${project.version}</flyway-xugu.version>
     </properties>
     <dependencies>
         <dependency>
@@ -72,6 +73,11 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>flyway-firebird</artifactId>
             <version>${flyway-firebird.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>flyway-xugu</artifactId>
+            <version>${flyway-xugu.version}</version>
         </dependency>
 
 
@@ -236,37 +242,6 @@
 
 
     </dependencies>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>net.adoptium</groupId>
-                <artifactId>jre</artifactId>
-                <classifier>windows-x64</classifier>
-                <version>${jre.version}</version>
-                <type>zip</type>
-                <scope>system</scope>
-                <systemPath>${basedir}/src/main/assembly/OpenJDK11U-jre_x64_windows_hotspot_${jre.version}_8.zip</systemPath>
-            </dependency>
-            <dependency>
-                <groupId>net.adoptium</groupId>
-                <artifactId>jre</artifactId>
-                <classifier>linux-x64</classifier>
-                <version>${jre.version}</version>
-                <type>tar.gz</type>
-                <scope>system</scope>
-                <systemPath>${basedir}/src/main/assembly/OpenJDK11U-jre_x64_linux_hotspot_${jre.version}_8.tar.gz</systemPath>
-            </dependency>
-            <dependency>
-                <groupId>net.adoptium</groupId>
-                <artifactId>jre</artifactId>
-                <classifier>macos-x64</classifier>
-                <version>${jre.version}</version>
-                <type>tar.gz</type>
-                <scope>system</scope>
-                <systemPath>${basedir}/src/main/assembly/OpenJDK11U-jre_x64_mac_hotspot_${jre.version}_8.tar.gz</systemPath>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <build>
         <plugins>
             <plugin>
@@ -343,25 +318,25 @@
             </activation>
             <dependencies>
                 <dependency>
-                    <groupId>net.adoptium</groupId>
+                    <groupId>net.adoptopenjdk</groupId>
                     <artifactId>jre</artifactId>
                     <classifier>windows-x64</classifier>
                     <type>zip</type>
-                    <scope>system</scope>
+                    <scope>provided</scope>
                 </dependency>
                 <dependency>
-                    <groupId>net.adoptium</groupId>
+                    <groupId>net.adoptopenjdk</groupId>
                     <artifactId>jre</artifactId>
                     <classifier>linux-x64</classifier>
                     <type>tar.gz</type>
-                    <scope>system</scope>
+                    <scope>provided</scope>
                 </dependency>
                 <dependency>
-                    <groupId>net.adoptium</groupId>
+                    <groupId>net.adoptopenjdk</groupId>
                     <artifactId>jre</artifactId>
                     <classifier>macos-x64</classifier>
                     <type>tar.gz</type>
-                    <scope>system</scope>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
             <build>
