@@ -358,10 +358,6 @@ public class ClassicConfiguration implements Configuration {
 
     @Override
     public DataSource getDataSource() {
-        if (dataSource == null &&
-                (StringUtils.hasLength(driver) || StringUtils.hasLength(user) || StringUtils.hasLength(password))) {
-            LOG.warn("Discarding INCOMPLETE dataSource configuration! " + ConfigUtils.URL + " must be set.");
-        }
         return dataSource;
     }
 
@@ -541,9 +537,13 @@ public class ClassicConfiguration implements Configuration {
      * <i>Flyway Teams only</i>
      */
     public void setIgnoreMigrationPatterns(String... ignoreMigrationPatterns) {
-        this.ignoreMigrationPatterns = Arrays.stream(ignoreMigrationPatterns)
-                .map(ValidatePattern::fromPattern)
-                .toArray(ValidatePattern[]::new);
+        if (Arrays.equals(ignoreMigrationPatterns, new String[] { "" })) {
+            this.ignoreMigrationPatterns = new ValidatePattern[0];
+        } else {
+            this.ignoreMigrationPatterns = Arrays.stream(ignoreMigrationPatterns)
+                    .map(ValidatePattern::fromPattern)
+                    .toArray(ValidatePattern[]::new);
+        }
     }
 
     /**
