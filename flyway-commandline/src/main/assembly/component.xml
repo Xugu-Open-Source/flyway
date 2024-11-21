@@ -179,6 +179,7 @@
                 <include>org.flywaydb:flyway-gcsm-integration</include>
                 <include>org.flywaydb:flyway-compare</include>
                 <include>org.flywaydb:flyway-rgcompare</include>
+                <include>org.flywaydb:flyway-rulesengine-sqlfluff</include>
                 <include>org.flywaydb:flyway-sqlserver</include>
                 <include>org.flywaydb:flyway-mysql</include>
                 <include>org.flywaydb:flyway-firebird</include>
@@ -186,6 +187,8 @@
                 <include>org.flywaydb:flyway-xugu</include>
             </includes>
         </dependencySet>
+
+
 
 
 
