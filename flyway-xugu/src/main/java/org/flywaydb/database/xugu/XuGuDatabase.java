@@ -88,10 +88,6 @@ public class XuGuDatabase extends Database<XuGuConnection> {
         return false;
     }
 
-    @Override
-    public boolean supportsChangingCurrentSchema() {
-        return true;
-    }
 
     @Override
     public String getBooleanTrue() {
