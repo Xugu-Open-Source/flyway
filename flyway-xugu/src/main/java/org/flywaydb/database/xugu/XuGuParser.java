@@ -162,87 +162,69 @@ public class XuGuParser extends Parser {
 
     @Override
     protected boolean shouldAdjustBlockDepth(ParserContext context, List<Token> tokens, Token token) {
-        // Package bodies can have an unbalanced BEGIN without END in the initialisation section.
         TokenType tokenType = token.getType();
-        if (context.getStatementType() == PLSQL_PACKAGE_BODY_STATEMENT && (TokenType.EOF == tokenType || TokenType.DELIMITER == tokenType)) {
+        if (TokenType.DELIMITER.equals(tokenType) || ";".equals(token.getText())) {
             return true;
-        }
-        // Handle wrapped SQL on these token types to ensure it gets treated as one block
-        if (context.getStatementType() == PLSQL_WRAPPED_STATEMENT && (TokenType.EOF == tokenType || TokenType.DELIMITER == tokenType)) {
+        } else if (TokenType.EOF.equals(tokenType)) {
             return true;
         }
 
-        // In Oracle, symbols { } affect the block depth in embedded Java code
-        if (token.getType() == TokenType.SYMBOL && context.getStatementType() == PLSQL_JAVA_STATEMENT) {
+        Token lastToken = getPreviousToken(tokens, context.getParensDepth());
+        if (lastToken != null && lastToken.getType() == TokenType.KEYWORD) {
             return true;
         }
+
         return super.shouldAdjustBlockDepth(context, tokens, token);
     }
 
     // These words increase the block depth - unless preceded by END (in which case the END will decrease the block depth)
     private static final List<String> CONTROL_FLOW_KEYWORDS = Arrays.asList("IF", "LOOP", "CASE");
+    private static final StatementType STORED_PROGRAM_STATEMENT = new StatementType();
 
     @Override
     protected void adjustBlockDepth(ParserContext context, List<Token> tokens, Token keyword, PeekingReader reader) {
-        TokenType tokenType = keyword.getType();
         String keywordText = keyword.getText();
 
         int parensDepth = keyword.getParensDepth();
 
-
-        if (lastTokenIs(tokens, parensDepth, "GOTO")) {
-            return;
+        if ("BEGIN".equalsIgnoreCase(keywordText) && context.getStatementType() == STORED_PROGRAM_STATEMENT) {
+            context.increaseBlockDepth(Integer.toString(parensDepth));
         }
 
-        if (context.getStatementType() == PLSQL_WRAPPED_STATEMENT) {
-            // ensure wrapped SQL has an increased block depth so it gets treated as one statement
-            if (context.getBlockDepth() == initialWrappedBlockDepth) {
-                context.increaseBlockDepth("WRAPPED");
-            }
-            // decrease block depth at the end to step out of a wrapped SQL block
-            if (TokenType.EOF == tokenType && context.getBlockDepth() > 0) {
-                context.decreaseBlockDepth();
-            }
-            // return early as we don't need to parse the contents of wrapped SQL - it's all one statement anyways
-            return;
-        } else {
-            // decrease block depth when wrapped SQL ends to step out of wrapped SQL block
-            if (context.getBlockDepth() > initialWrappedBlockDepth && context.getBlockInitiator().equals("WRAPPED")) {
-                initialWrappedBlockDepth = -1;
+        if (context.getBlockDepth() > 0 && lastTokenIs(tokens, parensDepth, "END") &&
+                !"IF".equalsIgnoreCase(keywordText) && !"LOOP".equalsIgnoreCase(keywordText)) {
+            String initiator = context.getBlockInitiator();
+            if (initiator.equals("") || initiator.equals(keywordText) || "AS".equalsIgnoreCase(keywordText) || initiator.equals(Integer.toString(parensDepth))) {
                 context.decreaseBlockDepth();
             }
         }
 
-        // In embedded Java code we judge the end of a class definition by the depth of braces.
-        // We ignore normal SQL keywords as Java code can contain arbitrary identifiers.
-        if (context.getStatementType() == PLSQL_JAVA_STATEMENT) {
-            if ("{".equals(keywordText)) {
-                context.increaseBlockDepth("PLSQL_JAVA_STATEMENT");
-            } else if ("}".equals(keywordText)) {
+        if (";".equals(keywordText) || TokenType.DELIMITER.equals(keyword.getType()) || TokenType.EOF.equals(keyword.getType())) {
+            if (context.getBlockDepth() > 0 && doesDelimiterEndFunction(tokens, keyword)) {
                 context.decreaseBlockDepth();
             }
-            return;
-        }
-
-
-        if ("BEGIN".equals(keywordText)
-                || (CONTROL_FLOW_KEYWORDS.contains(keywordText) && !precedingEndAttachesToThisKeyword(tokens, parensDepth, context, keyword))
-                || ("TRIGGER".equals(keywordText) && lastTokenIs(tokens, parensDepth, "COMPOUND"))
-                || doTokensMatchPattern(tokens, keyword, PLSQL_PACKAGE_BODY_REGEX)
-                || doTokensMatchPattern(tokens, keyword, PLSQL_PACKAGE_DEFINITION_REGEX)
-                || doTokensMatchPattern(tokens, keyword, PLSQL_TYPE_BODY_REGEX)
-        ) {
-            context.increaseBlockDepth(keywordText);
-        } else if ("END".equals(keywordText)) {
-            context.decreaseBlockDepth();
-        }
-
-        // Package bodies can have an unbalanced BEGIN without END in the initialisation section. This allows us
-        // to exit the package even though we are still at block depth 1 due to the BEGIN.
-        if (context.getStatementType() == PLSQL_PACKAGE_BODY_STATEMENT && (TokenType.EOF == tokenType || TokenType.DELIMITER == tokenType) && context.getBlockDepth() == 1) {
-            context.decreaseBlockDepth();
         }
     }
+    private boolean doesDelimiterEndFunction(List<Token> tokens, Token delimiter) {
+        // if there's not enough tokens, it's not the function
+        if (tokens.size() < 2) {
+            return false;
+        }
+
+        // if the previous keyword was not inside some brackets, it's not the function
+        if (tokens.get(tokens.size() - 1).getParensDepth() != delimiter.getParensDepth() + 1) {
+            return false;
+        }
+
+        // if the previous token was not IF or REPEAT, it's not the function
+        Token previousToken = getPreviousToken(tokens, delimiter.getParensDepth());
+        if (previousToken == null || !("IF".equals(previousToken.getText()) || "REPEAT".equals(previousToken.getText()))) {
+            return false;
+        }
+
+        return true;
+    }
+
 
     private boolean precedingEndAttachesToThisKeyword(List<Token> tokens, int parensDepth, ParserContext context, Token keyword) {
         // Normally IF, LOOP and CASE all pair up with END IF, END LOOP, END CASE
