@@ -36,6 +36,7 @@
         <flyway-mysql.version>${project.version}</flyway-mysql.version>
         <flyway-firebird.version>${project.version}</flyway-firebird.version>
         <jre.version>17.0.5</jre.version>
+        <flyway-xugu.version>${project.version}</flyway-xugu.version>
     </properties>
     <dependencies>
         <dependency>
@@ -78,6 +79,11 @@
             <artifactId>flyway-firebird</artifactId>
             <version>${flyway-firebird.version}</version>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>flyway-xugu</artifactId>
+            <version>${flyway-xugu.version}</version>
         </dependency>
 
 
