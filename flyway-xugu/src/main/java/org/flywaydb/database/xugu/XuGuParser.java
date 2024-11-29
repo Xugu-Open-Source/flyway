@@ -19,10 +19,8 @@ import org.flywaydb.core.api.configuration.Configuration;
 import org.flywaydb.core.internal.parser.*;
 import org.flywaydb.core.internal.sqlscript.Delimiter;
 import org.flywaydb.core.internal.sqlscript.ParsedSqlStatement;
-import org.flywaydb.core.internal.util.StringUtils;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -31,9 +29,6 @@ public class XuGuParser extends Parser {
     private static final Delimiter PLSQL_DELIMITER = new Delimiter("/", true);
     //                                                 accessible   by    (        keyword<space>optionalidentifier                      )
     private static final String ACCESSIBLE_BY_REGEX = "ACCESSIBLE\\sBY\\s\\(?((FUNCTION|PROCEDURE|PACKAGE|TRIGGER|TYPE)\\s[^\\s]*\\s?+)*\\)?";
-
-    private static final Pattern PLSQL_TYPE_BODY_REGEX = Pattern.compile(
-            "^CREATE(\\sOR\\sREPLACE)?(\\s(NON)?EDITIONABLE)?\\sTYPE\\sBODY\\s([^\\s]*\\s)?(IS|AS)");
 
     private static final Pattern PLSQL_PACKAGE_BODY_REGEX = Pattern.compile(
             "^CREATE(\\s*OR\\s*REPLACE)?(\\s*(NON)?EDITIONABLE)?\\s*PACKAGE\\s*BODY\\s*([^\\s]*\\s)?(IS|AS)");
@@ -64,14 +59,6 @@ public class XuGuParser extends Parser {
 
     private static final StatementType PLSQL_WRAPPED_STATEMENT = new StatementType();
     private int initialWrappedBlockDepth = -1;
-
-    private static Pattern toRegex(String... commands) {
-        return Pattern.compile(toRegexPattern(commands));
-    }
-
-    private static String toRegexPattern(String... commands) {
-        return "^(" + StringUtils.arrayToDelimitedString("|", commands) + ")";
-    }
 
     public XuGuParser(Configuration configuration, ParsingContext parsingContext
     ) {
@@ -177,8 +164,6 @@ public class XuGuParser extends Parser {
         return super.shouldAdjustBlockDepth(context, tokens, token);
     }
 
-    // These words increase the block depth - unless preceded by END (in which case the END will decrease the block depth)
-    private static final List<String> CONTROL_FLOW_KEYWORDS = Arrays.asList("IF", "LOOP", "CASE");
     private static final StatementType STORED_PROGRAM_STATEMENT = new StatementType();
 
     @Override
@@ -204,45 +189,10 @@ public class XuGuParser extends Parser {
             }
         }
 
-        if (";".equals(keywordText) || TokenType.DELIMITER.equals(keyword.getType()) || TokenType.EOF.equals(keyword.getType())) {
-            if (context.getBlockDepth() > 0 && doesDelimiterEndFunction(tokens, keyword)) {
-                context.decreaseBlockDepth();
-            }
-        }
-    }
-    private boolean doesDelimiterEndFunction(List<Token> tokens, Token delimiter) {
-        // if there's not enough tokens, it's not the function
-        if (tokens.size() < 2) {
-            return false;
-        }
 
-        // if the previous keyword was not inside some brackets, it's not the function
-        if (tokens.get(tokens.size() - 1).getParensDepth() != delimiter.getParensDepth() + 1) {
-            return false;
-        }
-
-        // if the previous token was not IF or REPEAT, it's not the function
-        Token previousToken = getPreviousToken(tokens, delimiter.getParensDepth());
-        if (previousToken == null || !("IF".equals(previousToken.getText()) || "REPEAT".equals(previousToken.getText()))) {
-            return false;
-        }
-
-        return true;
     }
 
 
-    private boolean precedingEndAttachesToThisKeyword(List<Token> tokens, int parensDepth, ParserContext context, Token keyword) {
-        // Normally IF, LOOP and CASE all pair up with END IF, END LOOP, END CASE
-        // However, CASE ... END is valid in expressions, so in code such as
-        //      FOR i IN 1 .. CASE WHEN foo THEN 5 ELSE 6 END
-        //      LOOP
-        //        ...
-        //      END LOOP
-        // the first END does *not* attach to the subsequent LOOP. The same is possible with $IF ... $END constructions
-        return lastTokenIs(tokens, parensDepth, "END") &&
-                lastTokenIsOnLine(tokens, parensDepth, keyword.getLine()) &&
-                keyword.getText().equals(context.getLastClosedBlockInitiator());
-    }
 
     @Override
     protected boolean isDelimiter(String peek, ParserContext context, int col, int colIgnoringWhitespace) {
