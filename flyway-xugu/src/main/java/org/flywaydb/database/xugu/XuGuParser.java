@@ -191,8 +191,13 @@ public class XuGuParser extends Parser {
             context.increaseBlockDepth(Integer.toString(parensDepth));
         }
 
-        if (context.getBlockDepth() > 0 && lastTokenIs(tokens, parensDepth, "END") &&
-                !"IF".equalsIgnoreCase(keywordText) && !"LOOP".equalsIgnoreCase(keywordText)) {
+        if (context.getBlockDepth() > 0
+                && lastTokenIs(tokens, parensDepth, "END")
+                && !"IF".equalsIgnoreCase(keywordText)
+                && !"CASE".equalsIgnoreCase(keywordText)
+                && !"LOOP".equalsIgnoreCase(keywordText)
+                && !"REPEAT".equalsIgnoreCase(keywordText)
+                && !"WHILE".equalsIgnoreCase(keywordText)) {
             String initiator = context.getBlockInitiator();
             if (initiator.equals("") || initiator.equals(keywordText) || "AS".equalsIgnoreCase(keywordText) || initiator.equals(Integer.toString(parensDepth))) {
                 context.decreaseBlockDepth();
