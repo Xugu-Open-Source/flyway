@@ -76,6 +76,7 @@
         <module>flyway-mysql</module>
         <module>flyway-firebird</module>
         <module>flyway-database-oracle</module>
+        <module>flyway-xugu</module>
 
 
 
