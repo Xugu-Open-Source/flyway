@@ -149,19 +149,7 @@ public class XuGuParser extends Parser {
 
     @Override
     protected boolean shouldAdjustBlockDepth(ParserContext context, List<Token> tokens, Token token) {
-        TokenType tokenType = token.getType();
-        if (TokenType.DELIMITER.equals(tokenType) || ";".equals(token.getText())) {
-            return true;
-        } else if (TokenType.EOF.equals(tokenType)) {
-            return true;
-        }
-
-        Token lastToken = getPreviousToken(tokens, context.getParensDepth());
-        if (lastToken != null && lastToken.getType() == TokenType.KEYWORD) {
-            return true;
-        }
-
-        return super.shouldAdjustBlockDepth(context, tokens, token);
+        return token.getParensDepth() == 0;
     }
 
     private static final StatementType STORED_PROGRAM_STATEMENT = new StatementType();
@@ -173,23 +161,22 @@ public class XuGuParser extends Parser {
         int parensDepth = keyword.getParensDepth();
 
         if ("BEGIN".equalsIgnoreCase(keywordText) && context.getStatementType() == STORED_PROGRAM_STATEMENT) {
-            context.increaseBlockDepth(Integer.toString(parensDepth));
+            context.increaseBlockDepth("");
         }
+        if ("CASE".equalsIgnoreCase(keywordText)) {
 
+            if (!lastTokenIs(tokens, parensDepth, "END")) {
+                context.increaseBlockDepth("");
+            }
+        }
         if (context.getBlockDepth() > 0
                 && lastTokenIs(tokens, parensDepth, "END")
                 && !"IF".equalsIgnoreCase(keywordText)
-                && !"CASE".equalsIgnoreCase(keywordText)
                 && !"LOOP".equalsIgnoreCase(keywordText)
                 && !"REPEAT".equalsIgnoreCase(keywordText)
                 && !"WHILE".equalsIgnoreCase(keywordText)) {
-            String initiator = context.getBlockInitiator();
-            if (initiator.equals("") || initiator.equals(keywordText) || "AS".equalsIgnoreCase(keywordText) || initiator.equals(Integer.toString(parensDepth))) {
-                context.decreaseBlockDepth();
-            }
+            context.decreaseBlockDepth();
         }
-
-
     }
 
 
