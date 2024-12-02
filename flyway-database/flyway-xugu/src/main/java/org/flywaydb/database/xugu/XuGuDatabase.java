@@ -17,6 +17,7 @@ package org.flywaydb.database.xugu;
 
 import lombok.CustomLog;
 import org.flywaydb.core.api.configuration.Configuration;
+import org.flywaydb.core.extensibility.Tier;
 import org.flywaydb.core.internal.database.base.Database;
 import org.flywaydb.core.internal.database.base.Table;
 import org.flywaydb.core.internal.jdbc.JdbcConnectionFactory;
@@ -37,10 +38,10 @@ public class XuGuDatabase extends Database<XuGuConnection> {
     }
 
     @Override
-    public final void ensureSupported() {
+    public final void ensureSupported(Configuration configuration) {
         ensureDatabaseIsRecentEnough("11");
 
-        ensureDatabaseNotOlderThanOtherwiseRecommendUpgradeToFlywayEdition("11.0", org.flywaydb.core.internal.license.Edition.ENTERPRISE);
+        ensureDatabaseNotOlderThanOtherwiseRecommendUpgradeToFlywayEdition("11.0", Tier.PREMIUM,configuration);
 
         recommendFlywayUpgradeIfNecessary("12.0");
     }
