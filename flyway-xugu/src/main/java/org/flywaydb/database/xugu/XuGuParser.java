@@ -28,7 +28,7 @@ public class XuGuParser extends Parser {
 
     private static final Delimiter PLSQL_DELIMITER = new Delimiter("/", true);
     //                                                 accessible   by    (        keyword<space>optionalidentifier                      )
-    private static final String ACCESSIBLE_BY_REGEX = "ACCESSIBLE\\sBY\\s\\(?((FUNCTION|PROCEDURE|PACKAGE|TRIGGER|TYPE)\\s[^\\s]*\\s?+)*\\)?";
+    private static final String ACCESSIBLE_BY_REGEX = "ACCESSIBLE\\sBY\\s\\(?(((FUNCTION|PROCEDURE|PACKAGE|TRIGGER|TYPE)\\s)?[^\\s]*\\s?+)*\\)?";
 
     private static final Pattern PLSQL_PACKAGE_BODY_REGEX = Pattern.compile(
             "^CREATE(\\s*OR\\s*REPLACE)?(\\s*(NON)?EDITIONABLE)?\\s*PACKAGE\\s*BODY\\s*([^\\s]*\\s)?(IS|AS)");
