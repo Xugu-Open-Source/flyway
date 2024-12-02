@@ -47,6 +47,7 @@
         <module>flyway-gcp-spanner</module>
         <module>flyway-mysql</module>
         <module>flyway-singlestore</module>
+        <module>flyway-xugu</module>
         <module>../flyway-sqlserver</module>
 
 
