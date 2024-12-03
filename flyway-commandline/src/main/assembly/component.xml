@@ -211,7 +211,7 @@
                 <include>org.flywaydb:flyway-singlestore</include>
                 <include>org.flywaydb:flyway-mysql</include>
                 <include>org.flywaydb:flyway-firebird</include>
-
+                <include>org.flywaydb:flyway-xugu</include>
 
 
 
