@@ -38,7 +38,7 @@ public class XuGuDatabase extends Database<XuGuConnection> {
     }
 
     @Override
-    public final void ensureSupported(Configuration configuration) {
+    public void ensureSupported(Configuration configuration) {
         ensureDatabaseIsRecentEnough("11");
 
         ensureDatabaseNotOlderThanOtherwiseRecommendUpgradeToFlywayEdition("11.0", Tier.PREMIUM,configuration);

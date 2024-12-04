@@ -71,23 +71,19 @@ public class XuGuParser extends Parser {
                                                  int nonCommentPartPos, int nonCommentPartLine, int nonCommentPartCol,
                                                  StatementType statementType, boolean canExecuteInTransaction,
                                                  Delimiter delimiter, String sql
-
-
+            , boolean batchable
     ) throws IOException {
         if (PLSQL_VIEW_STATEMENT == statementType) {
             sql = sql.trim();
 
-            // Strip extra semicolon to avoid issues with WITH statements containing PL/SQL
             if (sql.endsWith(";")) {
                 sql = sql.substring(0, sql.length() - 1);
             }
         }
-
         return super.createStatement(reader, recorder, statementPos, statementLine, statementCol,
                 nonCommentPartPos, nonCommentPartLine, nonCommentPartCol,
                 statementType, canExecuteInTransaction, delimiter, sql
-
-
+                , batchable
         );
     }
 
