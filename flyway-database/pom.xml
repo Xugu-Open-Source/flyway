@@ -32,6 +32,7 @@
         <module>flyway-mysql</module>
         <module>flyway-singlestore</module>
         <module>flyway-sqlserver</module>
+        <module>flyway-xugu</module>
 
 
 
