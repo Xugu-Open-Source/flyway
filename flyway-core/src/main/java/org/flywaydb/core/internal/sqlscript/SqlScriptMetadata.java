@@ -1,17 +1,21 @@
-/*
- * Copyright (C) Red Gate Software Ltd 2010-2024
- *
+/*-
+ * ========================LICENSE_START=================================
+ * flyway-core
+ * ========================================================================
+ * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * =========================LICENSE_END==================================
  */
 package org.flywaydb.core.internal.sqlscript;
 
@@ -45,7 +49,7 @@ public class SqlScriptMetadata {
     private String shouldExecuteExpression;
     private boolean shouldExecute;
 
-    private SqlScriptMetadata(Map<String, String> metadata, Configuration config) {
+    private SqlScriptMetadata(Map<String, String> metadata, Map<String, String> unmappedMetadata, Configuration config) {
         // Make copy to prevent removing elements from the original
         metadata = new HashMap<>(metadata);
 
@@ -100,13 +104,16 @@ public class SqlScriptMetadata {
     public static SqlScriptMetadata fromResource(LoadableResource resource, Parser parser, Configuration config) {
         if (resource != null) {
             LOG.debug("Found script configuration: " + resource.getFilename());
+            var unmappedMetadata = ConfigUtils.loadConfigurationFromReader(resource.read());
             if (parser == null) {
-                return new SqlScriptMetadata(ConfigUtils.loadConfigurationFromReader(resource.read()), config);
+                return new SqlScriptMetadata(unmappedMetadata, unmappedMetadata, config);
             }
-            return new SqlScriptMetadata(ConfigUtils.loadConfigurationFromReader(
-                    PlaceholderReplacingReader.create(parser.configuration, parser.parsingContext, resource.read())), parser.configuration);
+
+            var mappedMetadata = ConfigUtils.loadConfigurationFromReader(
+                PlaceholderReplacingReader.create(parser.configuration, parser.parsingContext, resource.read()));
+            return new SqlScriptMetadata(mappedMetadata, unmappedMetadata, parser.configuration);
         }
-        return new SqlScriptMetadata(new HashMap<>(), config);
+        return new SqlScriptMetadata(new HashMap<>(), new HashMap<>(), config);
     }
 
     public static LoadableResource getMetadataResource(ResourceProvider resourceProvider, LoadableResource resource) {

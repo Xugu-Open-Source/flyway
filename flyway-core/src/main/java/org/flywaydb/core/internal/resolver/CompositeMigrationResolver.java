@@ -1,22 +1,26 @@
-/*
- * Copyright (C) Red Gate Software Ltd 2010-2024
- *
+/*-
+ * ========================LICENSE_START=================================
+ * flyway-core
+ * ========================================================================
+ * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * =========================LICENSE_END==================================
  */
 package org.flywaydb.core.internal.resolver;
 
 import org.flywaydb.core.api.ClassProvider;
-import org.flywaydb.core.api.ErrorCode;
+import org.flywaydb.core.api.CoreErrorCode;
 import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.ResourceProvider;
 import org.flywaydb.core.api.configuration.Configuration;
@@ -31,8 +35,6 @@ import org.flywaydb.core.internal.resolver.sql.SqlMigrationResolver;
 import org.flywaydb.core.internal.resolver.script.ScriptMigrationResolver;
 import org.flywaydb.core.internal.sqlscript.SqlScriptExecutorFactory;
 import org.flywaydb.core.internal.sqlscript.SqlScriptFactory;
-
-
 
 
 
@@ -94,14 +96,14 @@ public class CompositeMigrationResolver implements MigrationResolver {
                                                             current.getPhysicalLocation(),
                                                             current.getType(),
                                                             next.getPhysicalLocation(),
-                                                            next.getType()), ErrorCode.DUPLICATE_VERSIONED_MIGRATION);
+                                                            next.getType()), CoreErrorCode.DUPLICATE_VERSIONED_MIGRATION);
                 }
                 throw new FlywayException(String.format("Found more than one repeatable migration with description %s\nOffenders:\n-> %s (%s)\n-> %s (%s)",
                                                         current.getDescription(),
                                                         current.getPhysicalLocation(),
                                                         current.getType(),
                                                         next.getPhysicalLocation(),
-                                                        next.getType()), ErrorCode.DUPLICATE_REPEATABLE_MIGRATION);
+                                                        next.getType()), CoreErrorCode.DUPLICATE_REPEATABLE_MIGRATION);
             }
         }
     }
