@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.flywaydb.core.internal.database.base;
+package org.flywaydb.core.internal.publishing;
 
-import static org.flywaydb.core.internal.util.FlywayDbWebsiteLinks.COMMUNITY_CONTRIBUTED_DATABASES;
-import org.flywaydb.core.internal.database.DatabaseType;
+import org.flywaydb.core.api.configuration.Configuration;
+import org.flywaydb.core.api.output.OperationResult;
+import org.flywaydb.core.extensibility.Plugin;
 
-public interface CommunityDatabaseType extends DatabaseType {
-
-     default String announcementForCommunitySupport() {
-        return getName() + " is a community contributed database, see "+ COMMUNITY_CONTRIBUTED_DATABASES + " for more details";
-    }
-
+public interface OperationResultPublisher extends Plugin {
+    void publish(Configuration configuration, OperationResult operationResult);
 }

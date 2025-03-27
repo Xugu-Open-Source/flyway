@@ -232,10 +232,13 @@
 
 
 
+
+
                 <include>org.flywaydb:flyway-database-ignite</include>
                 <include>org.flywaydb:flyway-database-tidb</include>
                 <include>org.flywaydb:flyway-database-yugabytedb</include>
                 <include>org.flywaydb:flyway-database-clickhouse</include>
+                <include>org.flywaydb:flyway-database-oceanbase</include>
             </includes>
         </dependencySet>
         <dependencySet>
@@ -248,6 +251,13 @@
             <excludes>
                 <exclude>commons-logging:commons-logging</exclude>
             </excludes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>drivers/cassandra</outputDirectory>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <includes>
+                <include>com.ing.data:cassandra-jdbc-wrapper</include>
+            </includes>
         </dependencySet>
         <dependencySet>
             <outputDirectory>drivers</outputDirectory>
@@ -264,6 +274,9 @@
                 <exclude>com.google.code.gson:gson</exclude>
                 <exclude>software.amazon.awssdk:s3</exclude>
                 <exclude>org.slf4j:slf4j-nop</exclude>
+                <exclude>org.apache.commons:commons-text</exclude>
+                <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-xml</exclude>
+                <exclude>com.microsoft.azure:msal4j</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>
