@@ -154,6 +154,9 @@
 
 
 
+
+
+
     </fileSets>
     <dependencySets>
         <dependencySet>
@@ -181,13 +184,24 @@
                 <include>net.java.dev.jna:jna</include>
                 <include>com.microsoft.azure:msal4j-persistence-extension</include>
             </includes>
+            <excludes>
+                <exclude>io.netty:netty-*</exclude>
+            </excludes>
         </dependencySet>
         <dependencySet>
             <outputDirectory>lib/aad</outputDirectory>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>com.microsoft.azure:msal4j</include>
+                <include>com.azure:azure-identity</include>
+                <include>com.microsoft.azure:azure-core</include>
+                <include>com.microsoft.azure:azure-core-http-netty</include>
+                <include>com.microsoft.azure:azure-json</include>
             </includes>
+            <excludes>
+                <exclude>com.microsoft.azure:msal4j-persistence-extension</exclude>
+                <exclude>io.netty:netty-*</exclude>
+            </excludes>
         </dependencySet>
         <dependencySet>
             <outputDirectory>lib/oracle_wallet</outputDirectory>
@@ -196,6 +210,13 @@
                 <include>com.oracle.database.security:oraclepki</include>
                 <include>com.oracle.database.security:osdt_cert</include>
                 <include>com.oracle.database.security:osdt_core</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>lib/netty</outputDirectory>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <includes>
+                <include>io.netty:netty-*</include>
             </includes>
         </dependencySet>
         <dependencySet>
@@ -270,7 +291,6 @@
                 <include>org.flywaydb:flyway-verb-baseline</include>
                 <include>org.flywaydb:flyway-verb-repair</include>
                 <include>org.flywaydb:flyway-experimental-sqlite</include>
-                <include>org.flywaydb:flyway-experimental-mongodb</include>
             </includes>
         </dependencySet>
         <dependencySet>
@@ -292,6 +312,7 @@
             </includes>
             <excludes>
                 <exclude>org.reactivestreams</exclude>
+                <exclude>io.netty:netty-*</exclude>
             </excludes>
         </dependencySet>
         <dependencySet>
@@ -299,6 +320,7 @@
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>org.mongodb:mongodb-driver-sync</include>
+                <include>org.flywaydb:flyway-experimental-mongodb</include>
             </includes>
         </dependencySet>
         <dependencySet>
@@ -319,9 +341,12 @@
                 <exclude>org.apache.commons:commons-text</exclude>
                 <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-xml</exclude>
                 <exclude>com.microsoft.azure:msal4j</exclude>
+                <exclude>com.azure:azure-identity</exclude>
                 <exclude>com.ing.data:cassandra-jdbc-wrapper</exclude>
                 <exclude>com.google.cloud:google-cloud-spanner-jdbc</exclude>
                 <exclude>net.java.dev.jna</exclude>
+                <exclude>org.mongodb:mongodb-driver-sync</exclude>
+                <exclude>io.netty:netty-*</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>

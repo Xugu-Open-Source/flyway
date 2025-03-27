@@ -43,7 +43,7 @@ import org.flywaydb.core.internal.util.Pair;
 @CustomLog
 public abstract class BaseSqlMigrationScanner implements ExperimentalMigrationScanner {
    
-    public Collection<Pair<LoadableResource, SqlScriptMetadata>> scan(final File dir, final Location location, final Configuration configuration, final ParsingContext parsingContext) {
+    protected Collection<Pair<LoadableResource, SqlScriptMetadata>> scanFromFileSystem(final File dir, final Location location, final Configuration configuration, final ParsingContext parsingContext) {
         final DirectoryValidationResult validationResult = getDirectoryValidationResult(dir);
         final String fileOrClasspath = location.isFileSystem() ? "filesystem" : "classpath";
         if (validationResult != DirectoryValidationResult.VALID) {
@@ -65,15 +65,16 @@ public abstract class BaseSqlMigrationScanner implements ExperimentalMigrationSc
                                                                           new ResourceNameParser(configuration),
                                                                           fileOrClasspath);
         return resourceNames.stream()
-                            .filter(path -> matchesPath(path, location))
-                            .map(resourceName -> processResource(location,
-                                                                 configuration,
-                                                                 resourceName, parsingContext))
-                            .toList();
+            .filter(path -> matchesPath(path, location))
+            .map(resourceName -> processResource(
+                location,
+                configuration,
+                resourceName,
+                parsingContext)).toList();
     }
     abstract boolean matchesPath(String path, Location location);
 
-    private static Pair<LoadableResource, SqlScriptMetadata> processResource(final Location location,
+    private Pair<LoadableResource, SqlScriptMetadata> processResource(final Location location,
         final Configuration configuration,
         final String resourceName,
         final ParsingContext parsingContext) {
@@ -100,7 +101,7 @@ public abstract class BaseSqlMigrationScanner implements ExperimentalMigrationSc
         return Pair.of(fileSystemResource, metadata);
     }
 
-    private static SqlScriptMetadata getSqlScriptMetadata(final Location location,
+    private SqlScriptMetadata getSqlScriptMetadata(final Location location,
         final Configuration configuration,
         final String resourceName,
         final ParsingContext parsingContext) {
