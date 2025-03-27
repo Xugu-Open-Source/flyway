@@ -29,4 +29,6 @@ public class MigrateOutput {
     public String type;
     public String filepath;
     public int executionTime;
+    
+    public transient Boolean rolledBack;
 }

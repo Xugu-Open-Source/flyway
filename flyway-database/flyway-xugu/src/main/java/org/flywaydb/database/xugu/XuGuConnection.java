@@ -35,15 +35,22 @@
 package org.flywaydb.database.xugu;
 
 import lombok.CustomLog;
+import lombok.Getter;
 import org.flywaydb.core.internal.database.base.Connection;
 import org.flywaydb.core.internal.database.base.Schema;
+import org.flywaydb.core.internal.util.StringUtils;
 
 import java.sql.SQLException;
 
 @CustomLog
 public class XuGuConnection extends Connection<XuGuDatabase> {
+
+    @Getter
+    private final boolean awsRds;
+
     XuGuConnection(XuGuDatabase database, java.sql.Connection connection) {
         super(database, connection);
+        awsRds = rdsAdminExists();
     }
 
     @Override
@@ -65,5 +72,13 @@ public class XuGuConnection extends Connection<XuGuDatabase> {
     @Override
     public Schema getSchema(String name) {
         return new XuGuSchema(jdbcTemplate, database, name);
+    }
+
+    private boolean rdsAdminExists() {
+        try {
+            return StringUtils.hasText(jdbcTemplate.queryForString("SELECT USER_NAME FROM ALL_USERS WHERE UPPER(USER_NAME) = 'SYSDBA'"));
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

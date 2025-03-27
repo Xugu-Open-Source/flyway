@@ -19,6 +19,7 @@
  */
 package org.flywaydb.database.sqlserver;
 
+import lombok.Getter;
 import org.flywaydb.core.internal.database.base.Connection;
 import org.flywaydb.core.internal.database.base.Schema;
 import org.flywaydb.core.internal.database.base.Table;
@@ -26,6 +27,7 @@ import org.flywaydb.core.internal.exception.FlywaySqlException;
 
 import java.sql.SQLException;
 import java.util.concurrent.Callable;
+import org.flywaydb.core.internal.util.StringUtils;
 
 /**
  * SQL Server connection.
@@ -33,7 +35,12 @@ import java.util.concurrent.Callable;
 public class SQLServerConnection extends Connection<SQLServerDatabase> {
     protected final String originalDatabaseName;
     private final String originalAnsiNulls;
+    @Getter
     private final boolean azure;
+    @Getter
+    private final boolean awsRds;
+
+    @Getter
     private final SQLServerEngineEdition engineEdition;
 
     protected SQLServerConnection(SQLServerDatabase database, java.sql.Connection connection) {
@@ -57,6 +64,8 @@ public class SQLServerConnection extends Connection<SQLServerDatabase> {
         } catch (SQLException e) {
             throw new FlywaySqlException("Unable to determine database engine edition.'", e);
         }
+
+        awsRds = rdsAdminExists();
 
         try {
             originalAnsiNulls = azure ? null :
@@ -97,7 +106,11 @@ public class SQLServerConnection extends Connection<SQLServerDatabase> {
         return new SQLServerApplicationLockTemplate(this, jdbcTemplate, originalDatabaseName, table.toString().hashCode()).execute(callable);
     }
 
-    public Boolean isAzureConnection() {return azure;}
-
-    public SQLServerEngineEdition getEngineEdition() {return engineEdition;}
+    private boolean rdsAdminExists() {
+        try {
+            return StringUtils.hasText(jdbcTemplate.queryForString("SELECT name FROM sys.databases WHERE name = 'RDSAdmin'"));
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

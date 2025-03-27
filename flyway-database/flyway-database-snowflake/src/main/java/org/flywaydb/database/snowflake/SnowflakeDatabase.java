@@ -19,6 +19,11 @@
  */
 package org.flywaydb.database.snowflake;
 
+import static org.flywaydb.core.internal.database.base.DatabaseConstants.DATABASE_HOSTING_AWS_SNOWFLAKE;
+import static org.flywaydb.core.internal.database.base.DatabaseConstants.DATABASE_HOSTING_AZURE_SNOWFLAKE;
+import static org.flywaydb.core.internal.database.base.DatabaseConstants.DATABASE_HOSTING_GCP_SNOWFLAKE;
+import static org.flywaydb.core.internal.database.base.DatabaseConstants.DATABASE_HOSTING_LOCAL;
+
 import lombok.CustomLog;
 import org.flywaydb.core.api.configuration.Configuration;
 import org.flywaydb.core.extensibility.Tier;
@@ -152,5 +157,18 @@ public class SnowflakeDatabase extends Database<SnowflakeConnection> {
     @Override
     public boolean catalogIsSchema() {
         return false;
+    }
+
+    @Override
+    public String getDatabaseHosting() {
+        String url = configuration.getUrl();
+
+        if (url.contains("azure.snowflakecomputing.com")) {
+            return DATABASE_HOSTING_AZURE_SNOWFLAKE;
+        } else if (url.contains("gcp.snowflakecomputing.com")) {
+            return DATABASE_HOSTING_GCP_SNOWFLAKE;
+        } else {
+            return DATABASE_HOSTING_AWS_SNOWFLAKE;
+        }
     }
 }
