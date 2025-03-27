@@ -26,5 +26,5 @@ import org.flywaydb.core.extensibility.Plugin;
 
 public interface ResultReportGenerator extends Plugin {
 
-    ReportDetails generateReport(OperationResult operationResult, Configuration configuration, LocalDateTime executionTime) throws Exception;
+    ReportGenerationOutput generateReport(OperationResult operationResult, Configuration configuration, LocalDateTime executionTime);
 }

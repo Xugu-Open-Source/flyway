@@ -46,6 +46,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import static org.flywaydb.core.internal.database.base.DatabaseConstants.DATABASE_HOSTING_AWS_RDS;
+import static org.flywaydb.core.internal.database.base.DatabaseConstants.DATABASE_HOSTING_RDS_URL_IDENTIFIER;
 
 @CustomLog
 public class XuGuDatabase extends Database<XuGuConnection> {
@@ -139,7 +140,7 @@ public class XuGuDatabase extends Database<XuGuConnection> {
 
     @Override
     public String getDatabaseHosting() {
-        if (getMainConnection().isAwsRds()) {
+        if ((getMainConnection().isAwsRds()||DATABASE_HOSTING_RDS_URL_IDENTIFIER.matcher(configuration.getUrl()).find())) {
             return DATABASE_HOSTING_AWS_RDS;
         } else {
             return super.getDatabaseHosting();

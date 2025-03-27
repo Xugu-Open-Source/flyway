@@ -29,6 +29,7 @@ import lombok.SneakyThrows;
 import org.flywaydb.core.api.CoreErrorCode;
 import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.MigrationInfoService;
+import org.flywaydb.core.api.callback.Callback;
 import org.flywaydb.core.api.callback.Event;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.flywaydb.core.api.configuration.Configuration;
@@ -127,8 +128,10 @@ public class Flyway {
      */
     public Flyway(Configuration configuration) {
         this.configuration = new ClassicConfiguration(configuration);
-        // Load callbacks from default package
-        this.configuration.loadCallbackLocation("db/callback", false);
+        List<Callback> callbacks = this.configuration.loadCallbackLocation("db/callback", false);
+        if (!callbacks.isEmpty()) {
+            this.configuration.setCallbacks(callbacks.toArray(new Callback[0]));
+        }
         this.flywayExecutor = new FlywayExecutor(this.configuration);
 
         LogFactory.setConfiguration(this.configuration);
@@ -246,6 +249,8 @@ public class Flyway {
             final var verb = configuration.getPluginRegister().getPlugins(VerbExtension.class).stream().filter(verbExtension -> verbExtension.handlesVerb("info")).findFirst();
             if (verb.isPresent()) {
                 return (MigrationInfoService) verb.get().executeVerb(configuration);
+            } else {
+                LOG.warn("Experimental mode for info is set but no verb is present");
             }
         }
         return flywayExecutor.execute((migrationResolver, schemaHistory, database, defaultSchema, schemas, callbackExecutor, statementInterceptor) -> {
@@ -332,6 +337,8 @@ public class Flyway {
             final var verb = configuration.getPluginRegister().getPlugins(VerbExtension.class).stream().filter(verbExtension -> verbExtension.handlesVerb("validate")).findFirst();
             if (verb.isPresent()) {
                 return (ValidateResult) verb.get().executeVerb(configuration);
+            } else {
+                LOG.warn("Experimental mode for validate is set but no verb is present");
             }
         }
         return flywayExecutor.execute((migrationResolver, schemaHistory, database, defaultSchema, schemas, callbackExecutor, statementInterceptor) -> {
@@ -450,6 +457,10 @@ public class Flyway {
     private ValidateResult doValidate(Database database, CompositeMigrationResolver migrationResolver, SchemaHistory schemaHistory,
                                       Schema defaultSchema, Schema[] schemas, CallbackExecutor callbackExecutor, ValidatePattern[] ignorePatterns) {
         ValidateResult validateResult = new DbValidate(database, schemaHistory, defaultSchema, migrationResolver, configuration, callbackExecutor, ignorePatterns).validate();
+
+        if (configuration.isCleanOnValidationError()) {
+            LOG.warn("cleanOnValidationError is deprecated and will be removed in a later release");
+        }
 
         if (!validateResult.validationSuccessful && configuration.isCleanOnValidationError()) {
             doClean(database, schemaHistory, defaultSchema, schemas, callbackExecutor);
