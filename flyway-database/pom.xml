@@ -33,6 +33,10 @@
         <module>flyway-singlestore</module>
         <module>flyway-sqlserver</module>
         <module>flyway-database-cassandra</module>
+        <module>flyway-xugu</module>
+
+
+
 
 
 
