@@ -177,6 +177,7 @@ public class FlywayExecutor {
                     if (rootTelemetryModel != null) {
                         rootTelemetryModel.setDatabaseEngine(database.getDatabaseType().getName());
                         rootTelemetryModel.setDatabaseVersion(database.getVersion().toString());
+                        rootTelemetryModel.setDatabaseHosting(database.getDatabaseHosting());
                     }
                 }
             }
@@ -294,9 +295,10 @@ public class FlywayExecutor {
 
 
 
-
-
-
+        LOG.debug("Scanning for script callbacks ...");
+        ScriptMigrationResolver scriptMigrationResolver = new ScriptMigrationResolver(resourceProvider, configuration, parsingContext, statementInterceptor);
+        scriptMigrationResolver.resolveCallbacks();
+        effectiveCallbacks.addAll(scriptMigrationResolver.scriptCallbacks);
 
         if (!configuration.isSkipDefaultCallbacks()) {
             SqlScriptExecutorFactory sqlScriptExecutorFactory = jdbcConnectionFactory.getDatabaseType().createSqlScriptExecutorFactory(
