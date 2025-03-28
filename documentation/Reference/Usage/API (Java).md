@@ -3,7 +3,6 @@ pill: overview
 subtitle: API
 redirect_from: /documentation/api/
 ---
-# API
 
 Flyway brings the largest benefits when **integrated within an application**. By integrating Flyway
 you can ensure that the application and its **database will always be compatible**, with no manual
@@ -150,7 +149,7 @@ See [configuration](Configuration) for a full list of supported configuration pa
 ### JDBC Drivers
 
 You will need to include the relevant JDBC driver for your chosen database as a dependency in your Java project.
-For instance in your `pom.xml` for a Maven project. The version of the JDBC driver supported for each database is specified in the 'Supported Databases' list in the left hand side navigation menu.
+For instance in your `pom.xml` for a Maven project. The version of the JDBC driver supported for each database is specified in the 'Database Driver Reference' list in the navigation menu.
 
 ### Spring Configuration
 

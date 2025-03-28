@@ -3,7 +3,6 @@ pill: gradle_overview
 subtitle: Gradle Plugin
 redirect_from: /documentation/gradle/
 ---
-# Gradle Plugin
 
 The Flyway Gradle plugin supports **Gradle 7.6.x*** and **Gradle 8.x**
 running on **Java 17**.
@@ -196,7 +195,7 @@ For details on how to setup and use custom Gradle configurations, see the [offic
 
 ### Adding dependencies on Flyway Database Types
 
-For some Flyway database types, like [Cloud Spanner](/supported databases/Google Cloud Spanner) and [SQL Server](<Supported Databases/SQL Server Database>), you'll need to add a dependency to the database type in a `buildscript` closure to get your Gradle commands to work properly. This puts the database type on the build classpath, and not the project classpath.
+For some Flyway database types, like [Cloud Spanner](<Database Driver Reference/Google Cloud Spanner>) and [SQL Server](<Database Driver Reference/SQL Server Database>), you'll need to add a dependency to the database type in a `buildscript` closure to get your Gradle commands to work properly. This puts the database type on the build classpath, and not the project classpath.
 
 Here is an example `build.gradle`:
 

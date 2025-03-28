@@ -2,8 +2,6 @@
 subtitle: 'Tutorial: Using MongoDB with Flyway'
 ---
 
-# Tutorial: Using MongoDB with Flyway
-
 This tutorial assumes you have successfully completed the **{% include quickstart-cli.html %}**
 tutorial. **If you have not done so, please do so first.** This tutorial picks up where that one left off.
 
@@ -36,7 +34,7 @@ You can verify that this is working using the MongoDB Compass tool to connect to
 
 Connecting to MongoDB is done the same as any other database.
 You can use the [url](<Configuration/Environments Namespace/Environment URL Setting>) configuration property to specify the connection string,
-either as part of an environment configuration or as standalone, also see [MongoDB support](Supported Databases/MongoDB):
+either as part of an environment configuration or as standalone, also see [MongoDB support](<Database Driver Reference/MongoDB>):
 
 In this tutorial we'll be setting things up in the TOML configuration file
 

@@ -2,8 +2,6 @@
 subtitle: 'Tutorial: Migrating from flyway-dev to flyway CLI'
 ---
 
-# Tutorial: Migrating from flyway-dev to flyway CLI
-
 ## Introduction
 
 The V11 release of Flyway saw several new Flyway CLI verbs removed from preview and officially released. In this
@@ -54,11 +52,11 @@ flyway-dev diff -p=C:\Users\redgate\Documents\TestFdCmdLine --from=Dev --to=Sche
 Flyway CLI also has a [diff](<Commands/Diff>) command which performs the same action, and takes
 a variety of sources to compare between:
 
-- envId - uses the environment with the id `envId`, defined in the TOML configuration
-- empty - models an empty database
-- schemaModel - the schema model folder referenced by schemaModelLocation
-- migrations - uses a buildEnvironment to represent the state of database after specified migrations have been applied
-- snapshot:`filePath` - uses a snapshot file at the specified file path
+- `envId` - uses the environment with the id `envId`, defined in the TOML configuration
+- `empty` - models an empty database
+- `schemaModel` - the schema model folder referenced by schemaModelLocation
+- `migrations` - uses a buildEnvironment to represent the state of database after specified migrations have been applied
+- `snapshot:<filePath>` - uses a snapshot file at the specified file path
 
 Therefore, to perform the same comparison between the dev environment and schemaModel using flyway CLI, the following
 command can be used:

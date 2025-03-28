@@ -5,7 +5,6 @@ redirect_from:
 - Getting Started/callbacks/
 - Tutorials/Tutorial Callbacks/
 ---
-# Tutorial: Callbacks
 
 This tutorial assumes you have successfully completed the **{% include quickstart-cli.html %}**
 tutorial. **If you have not done so, please do so first.** This tutorial picks up where that one left off.
@@ -78,4 +77,6 @@ operation. Each time you invoke migrate again in the future, the callback will n
 
 In this brief tutorial we saw how to
 - create callbacks
-- triggers the execution of callbacks
+- trigger the execution of callbacks
+
+Learn more about all the possible [callback events](/callback-events) in Flyway.

@@ -1,7 +1,6 @@
 ---
 subtitle: 'Tutorial: Using Pingu to connect to MongoDB'
 ---
-# Tutorial: Using Native Connectors to connect to MongoDB
 
 This tutorial shows you how to connect to MongoDB using Flyway with Native Connectors enabled.
 Native Connectors is a new engine designed to handle migrations without relying on the JDBC framework.
@@ -109,7 +108,7 @@ See release notes here: https://rd.gt/416ObMi
 You are using a preview feature 'ExperimentalMigrate'.
 Please report any issues you encounter to DatabaseDevOps@red-gate.com
 -----------------------------------------------------------------------------
-Database: <<details removed>> (Mongo DB)
+Database: <<details removed>> (MongoDB)
 Schema history table "test"."flyway_schema_history" does not exist yet
 Successfully validated 1 migration (execution time 00:00.934s)
 Creating Schema History table "test"."flyway_schema_history" ...

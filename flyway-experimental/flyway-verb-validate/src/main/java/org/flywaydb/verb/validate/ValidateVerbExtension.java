@@ -19,35 +19,30 @@
  */
 package org.flywaydb.verb.validate;
 
-import static org.flywaydb.core.experimental.ExperimentalModeUtils.logExperimentalDataTelemetry;
-
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import lombok.CustomLog;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.flywaydb.core.FlywayTelemetryManager;
 import org.flywaydb.core.api.CoreErrorCode;
 import org.flywaydb.core.api.ErrorDetails;
-import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationState;
 import org.flywaydb.core.api.MigrationVersion;
+import org.flywaydb.core.api.callback.Event;
 import org.flywaydb.core.api.configuration.Configuration;
 import org.flywaydb.core.api.output.ValidateOutput;
 import org.flywaydb.core.api.output.ValidateResult;
-import org.flywaydb.core.api.resource.LoadableResourceMetadata;
 import org.flywaydb.core.experimental.ExperimentalDatabase;
-import org.flywaydb.core.experimental.schemahistory.SchemaHistoryModel;
 import org.flywaydb.core.extensibility.VerbExtension;
 import org.flywaydb.core.internal.license.VersionPrinter;
 import org.flywaydb.core.internal.util.StopWatch;
 import org.flywaydb.core.internal.util.TimeFormat;
 import org.flywaydb.core.internal.util.Pair;
 import org.flywaydb.core.internal.util.ValidatePatternUtils;
+import org.flywaydb.nc.callbacks.CallbackManager;
 import org.flywaydb.verb.VerbUtils;
+import org.flywaydb.verb.preparation.PreparationContext;
 
 @CustomLog
 public class ValidateVerbExtension implements VerbExtension {
@@ -58,84 +53,90 @@ public class ValidateVerbExtension implements VerbExtension {
     }
 
     @Override
-    public Object executeVerb(final Configuration configuration, FlywayTelemetryManager flywayTelemetryManager) {
+    public Object executeVerb(final Configuration configuration) {
+        final StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
-        try {
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
+        final PreparationContext context = PreparationContext.get(configuration);
 
-            final ExperimentalDatabase experimentalDatabase = VerbUtils.getExperimentalDatabase(configuration);
-            final SchemaHistoryModel schemaHistoryModel = VerbUtils.getSchemaHistoryModel(configuration, experimentalDatabase);
+        final ExperimentalDatabase database = context.getDatabase();
 
-            logExperimentalDataTelemetry(flywayTelemetryManager, experimentalDatabase.getDatabaseMetaData());
+        final CallbackManager callbackManager = new CallbackManager(context.getResources(),
+            configuration.isSkipDefaultCallbacks());
 
-            final Collection<LoadableResourceMetadata> resources = VerbUtils.scanForResources(configuration,
-                experimentalDatabase);
-            final MigrationInfo[] migrations = VerbUtils.getMigrations(schemaHistoryModel,
-                resources.toArray(LoadableResourceMetadata[]::new),
-                configuration);
+        callbackManager.handleEvent(Event.BEFORE_VALIDATE, database, configuration, context.getParsingContext());
 
-            if (!experimentalDatabase.schemaHistoryTableExists(configuration.getTable())) {
-                LOG.info("Schema history table " + experimentalDatabase.quote(experimentalDatabase.getCurrentSchema(),  configuration.getTable()) + " does not exist yet");
+        final MigrationInfo[] migrations = context.getMigrations();
+
+        if (!database.schemaHistoryTableExists(configuration.getTable())) {
+            LOG.info("Schema history table "
+                + database.quote(database.getCurrentSchema(), configuration.getTable())
+                + " does not exist yet");
+        }
+
+        if (!database.isSchemaExists(database.getCurrentSchema())) {
+            if (migrations.length != 0
+                && !ValidatePatternUtils.isPendingIgnored(configuration.getIgnoreMigrationPatterns())) {
+                final String validationErrorMessage = "Schema "
+                    + database.doQuote(database.getCurrentSchema())
+                    + " doesn't exist yet";
+                final ErrorDetails validationError = new ErrorDetails(CoreErrorCode.SCHEMA_DOES_NOT_EXIST,
+                    validationErrorMessage);
+                return new ValidateResult(VersionPrinter.getVersion(),
+                    database.getDatabaseMetaData().databaseName(),
+                    validationError,
+                    false,
+                    0,
+                    new ArrayList<>(),
+                    new ArrayList<>());
             }
+        }
+        stopWatch.stop();
 
-            if (!experimentalDatabase.isSchemaExists(experimentalDatabase.getCurrentSchema())) {
-                if (migrations.length != 0 && !ValidatePatternUtils.isPendingIgnored(configuration.getIgnoreMigrationPatterns())) {
-                    String validationErrorMessage = "Schema " + experimentalDatabase.doQuote(experimentalDatabase.getCurrentSchema())  + " doesn't exist yet";
-                    ErrorDetails validationError = new ErrorDetails(CoreErrorCode.SCHEMA_DOES_NOT_EXIST, validationErrorMessage);
-                    return new ValidateResult(VersionPrinter.getVersion(),
-                        experimentalDatabase.getDatabaseMetaData().databaseName(),
-                        validationError,
-                        false,
-                        0,
-                        new ArrayList<>(),
-                        new ArrayList<>());
-                }
-            }
-            stopWatch.stop();
+        final List<MigrationInfo> notIgnoredMigrations = VerbUtils.removeIgnoredMigrations(configuration, migrations);
+        final List<ValidateOutput> invalidMigrations = getInvalidMigrations(notIgnoredMigrations, configuration);
+        if (invalidMigrations.isEmpty()) {
+            final int count = migrations.length;
+            LOG.info(String.format("Successfully validated %d migration%s (execution time %s)",
+                count,
+                count == 1 ? "" : "s",
+                TimeFormat.format(stopWatch.getTotalTimeMillis())));
 
-            final List<MigrationInfo> notIgnoredMigrations = VerbUtils.removeIgnoredMigrations(configuration, migrations);
-            final List<ValidateOutput> invalidMigrations = getInvalidMigrations(notIgnoredMigrations, configuration);
-            if (invalidMigrations.isEmpty()) {
-                final int count = migrations.length;
-                LOG.info(String.format("Successfully validated %d migration%s (execution time %s)",
-                    count,
-                    count == 1 ? "" : "s",
-                    TimeFormat.format(stopWatch.getTotalTimeMillis())));
+            callbackManager.handleEvent(Event.AFTER_VALIDATE, database, configuration, context.getParsingContext());
 
-                if (migrations.length == 0) {
-                    final ArrayList<String> warnings = new ArrayList<>();
-                    final String noMigrationsWarning = "No migrations found. Are your locations set up correctly?";
-                    warnings.add(noMigrationsWarning);
-                    LOG.warn(noMigrationsWarning);
-
-                    return new ValidateResult(VersionPrinter.getVersion(),
-                        experimentalDatabase.getDatabaseMetaData().databaseName(),
-                        null,
-                        true,
-                        migrations.length,
-                        new ArrayList<>(),
-                        warnings);
-                }
+            if (migrations.length == 0) {
+                final ArrayList<String> warnings = new ArrayList<>();
+                final String noMigrationsWarning = "No migrations found. Are your locations set up correctly?";
+                warnings.add(noMigrationsWarning);
+                LOG.warn(noMigrationsWarning);
 
                 return new ValidateResult(VersionPrinter.getVersion(),
-                experimentalDatabase.getDatabaseMetaData().databaseName(),
+                    database.getDatabaseMetaData().databaseName(),
+                    null,
+                    true,
+                    migrations.length,
+                    new ArrayList<>(),
+                    warnings);
+            }
+
+            return new ValidateResult(VersionPrinter.getVersion(),
+                database.getDatabaseMetaData().databaseName(),
                 null,
                 true,
                 migrations.length,
                 invalidMigrations,
                 new ArrayList<>());
-            }
-            return new ValidateResult(VersionPrinter.getVersion(),
-                experimentalDatabase.getDatabaseMetaData().databaseName(),
-                new ErrorDetails(CoreErrorCode.VALIDATE_ERROR, "Migrations have failed validation"),
-                false,
-                0,
-                invalidMigrations,
-                new ArrayList<>());
-        } catch (SQLException e) {
-            throw new FlywayException(e);
         }
+
+        callbackManager.handleEvent(Event.AFTER_VALIDATE_ERROR, database, configuration, context.getParsingContext());
+
+        return new ValidateResult(VersionPrinter.getVersion(),
+            database.getDatabaseMetaData().databaseName(),
+            new ErrorDetails(CoreErrorCode.VALIDATE_ERROR, "Migrations have failed validation"),
+            false,
+            0,
+            invalidMigrations,
+            new ArrayList<>());
     }
 
     private List<ValidateOutput> getInvalidMigrations(List<MigrationInfo> migrations, Configuration configuration) {
@@ -161,10 +162,15 @@ public class ValidateVerbExtension implements VerbExtension {
     }
 
     private static MigrationVersion getAppliedBaselineVersion(final List<MigrationInfo> migrations) {
-        return migrations.stream().filter(x -> x.getType().isBaseline()).map(MigrationInfo::getVersion).max(MigrationVersion::compareTo).orElse(null);
+        return migrations.stream()
+            .filter(x -> x.getType().isBaseline())
+            .map(MigrationInfo::getVersion)
+            .max(MigrationVersion::compareTo)
+            .orElse(null);
     }
 
-    private static List<ValidateOutput> getOutdatedRepeatables(final List<MigrationInfo> migrations, boolean pendingIgnored) {
+    private static List<ValidateOutput> getOutdatedRepeatables(final List<MigrationInfo> migrations,
+        boolean pendingIgnored) {
         return migrations.stream()
             .filter(x -> !pendingIgnored)
             .filter(x -> x.getState() == MigrationState.OUTDATED)
@@ -172,16 +178,18 @@ public class ValidateVerbExtension implements VerbExtension {
                 x.getDescription(),
                 x.getPhysicalLocation(),
                 new ErrorDetails(CoreErrorCode.OUTDATED_REPEATABLE_MIGRATION,
-                    "Detected outdated resolved repeatable migration that should be re-applied to database: " + x.getDescription())))
+                    "Detected outdated resolved repeatable migration that should be re-applied to database: "
+                        + x.getDescription())))
             .toList();
     }
-    
-    private static List<ValidateOutput> getTypeMismatch(final List<MigrationInfo> migrations, final MigrationVersion appliedBaselineVersion) {
+
+    private static List<ValidateOutput> getTypeMismatch(final List<MigrationInfo> migrations,
+        final MigrationVersion appliedBaselineVersion) {
         return migrations.stream()
             .filter(x -> !x.isTypeMatching())
             .filter(x -> x.isRepeatable() || x.getVersion().isNewerThan(appliedBaselineVersion))
             .map(ValidateVerbExtension::typeMismatchesToValidateOutput)
-            .toList();         
+            .toList();
     }
 
     private static ValidateOutput typeMismatchesToValidateOutput(MigrationInfo mismatch) {
@@ -205,30 +213,37 @@ public class ValidateVerbExtension implements VerbExtension {
             mismatch.getDescription(),
             mismatch.getPhysicalLocation(),
             new ErrorDetails(CoreErrorCode.TYPE_MISMATCH, errorMessage.toString()));
-        
     }
 
-    private static List<ValidateOutput> getChecksumChanged(final List<MigrationInfo> migrations, final boolean pendingIgnored, final MigrationVersion appliedBaselineVersion) {
+    private static List<ValidateOutput> getChecksumChanged(final List<MigrationInfo> migrations,
+        final boolean pendingIgnored,
+        final MigrationVersion appliedBaselineVersion) {
         return migrations.stream()
             .filter(x -> x.isVersioned() || x.getState() != MigrationState.OUTDATED && pendingIgnored)
             .filter(x -> x.isVersioned() || x.getState() != MigrationState.SUPERSEDED && pendingIgnored)
             .filter(x -> x.isRepeatable() || x.getVersion().compareTo(appliedBaselineVersion) > 0)
             .filter(migrationInfo -> !migrationInfo.isChecksumMatching())
             .map(x -> {
-                final String migrationIdentifier = x.isVersioned() ? "version " + x.getVersion().getVersion() : x.getScript();
+                final String migrationIdentifier = x.isVersioned()
+                    ? "version " + x.getVersion().getVersion()
+                    : x.getScript();
                 return new ValidateOutput(x.isVersioned() ? x.getVersion().getVersion() : "",
-                x.getDescription(),
-                x.getPhysicalLocation(),
-                new ErrorDetails(CoreErrorCode.CHECKSUM_MISMATCH,
-                    "Migration checksum mismatch for migration " + migrationIdentifier +
-                        "\n-> Applied to database : " + x.getAppliedChecksum() +
-                        "\n-> Resolved locally    : " + x.getResolvedChecksum() +
-                        "\nEither revert the changes to the migration, or run repair to update the schema history."));
+                    x.getDescription(),
+                    x.getPhysicalLocation(),
+                    new ErrorDetails(CoreErrorCode.CHECKSUM_MISMATCH,
+                        "Migration checksum mismatch for migration "
+                            + migrationIdentifier
+                            + "\n-> Applied to database : "
+                            + x.getAppliedChecksum()
+                            + "\n-> Resolved locally    : "
+                            + x.getResolvedChecksum()
+                            + "\nEither revert the changes to the migration, or run repair to update the schema history."));
             })
             .toList();
     }
 
-    private static List<ValidateOutput> getDescriptionChanged(final List<MigrationInfo> migrations, final MigrationVersion appliedBaselineVersion) {
+    private static List<ValidateOutput> getDescriptionChanged(final List<MigrationInfo> migrations,
+        final MigrationVersion appliedBaselineVersion) {
         return migrations.stream()
             .filter(MigrationInfo::isVersioned)
             .filter(x -> x.getVersion().compareTo(appliedBaselineVersion) > 0)
@@ -237,17 +252,21 @@ public class ValidateVerbExtension implements VerbExtension {
                 x.getDescription(),
                 x.getPhysicalLocation(),
                 new ErrorDetails(CoreErrorCode.DESCRIPTION_MISMATCH,
-                    "Migration description mismatch for migration version " + x.getVersion().getVersion() +
-                        "\n-> Applied to database : " + x.getAppliedDescription() +
-                        "\n-> Resolved locally    : " + x.getResolvedDescription() +
-                        "\nEither revert the changes to the migration, or run repair to update the schema history.")))
+                    "Migration description mismatch for migration version "
+                        + x.getVersion().getVersion()
+                        + "\n-> Applied to database : "
+                        + x.getAppliedDescription()
+                        + "\n-> Resolved locally    : "
+                        + x.getResolvedDescription()
+                        + "\nEither revert the changes to the migration, or run repair to update the schema history.")))
             .toList();
     }
-    
-    private static List<ValidateOutput> getMissingAndFutureSuccessMigrations(final List<MigrationInfo> migrations, boolean futureIgnored) {
+
+    private static List<ValidateOutput> getMissingAndFutureSuccessMigrations(final List<MigrationInfo> migrations,
+        boolean futureIgnored) {
         return migrations.stream()
-            .filter(x -> x.getState() == MigrationState.MISSING_SUCCESS
-                || (!futureIgnored && x.getState() == MigrationState.FUTURE_SUCCESS))
+            .filter(x -> x.getState() == MigrationState.MISSING_SUCCESS || (!futureIgnored
+                && x.getState() == MigrationState.FUTURE_SUCCESS))
             .filter(x -> !x.getState().isResolved())
             .filter(MigrationInfo::isVersioned)
             .map(x -> new ValidateOutput(x.getVersion().getVersion(),
@@ -257,7 +276,7 @@ public class ValidateVerbExtension implements VerbExtension {
                     "Detected applied migration not resolved locally: " + x.getVersion().getVersion())))
             .toList();
     }
-    
+
     private static List<ValidateOutput> getMissingSuccessRepeatables(final List<MigrationInfo> migrations) {
         return migrations.stream()
             .filter(x -> x.getState() == MigrationState.MISSING_SUCCESS)
@@ -270,13 +289,19 @@ public class ValidateVerbExtension implements VerbExtension {
             .toList();
     }
 
-    private static List<ValidateOutput> getNotIgnoredIgnored(final List<MigrationInfo> migrations, final Configuration configuration, final List<ValidateOutput> result) {
-        final boolean isIgnoredIgnored = configuration.getCherryPick()!= null || ValidatePatternUtils.isIgnoredIgnored(configuration.getIgnoreMigrationPatterns());
+    private static List<ValidateOutput> getNotIgnoredIgnored(final List<MigrationInfo> migrations,
+        final Configuration configuration,
+        final List<ValidateOutput> result) {
+        final boolean isIgnoredIgnored = configuration.getCherryPick() != null || ValidatePatternUtils.isIgnoredIgnored(
+            configuration.getIgnoreMigrationPatterns());
         if (isIgnoredIgnored) {
             return List.of();
         }
-        final Set<String> errored = result.stream().map(x -> x.version == null ? x.description : x.version).collect(Collectors.toSet());
-        return migrations.stream().filter(x -> x.getState() == MigrationState.IGNORED)
+        final Set<String> errored = result.stream()
+            .map(x -> x.version == null ? x.description : x.version)
+            .collect(Collectors.toSet());
+        return migrations.stream()
+            .filter(x -> x.getState() == MigrationState.IGNORED)
             .filter(x -> !x.getType().isBaseline())
             .filter(x -> !x.getType().isUndo())
             .filter(x -> !errored.contains(x.isRepeatable() ? x.getDescription() : x.getVersion().getVersion()))
@@ -284,18 +309,27 @@ public class ValidateVerbExtension implements VerbExtension {
             .map(x -> {
                 if (x.isVersioned()) {
                     final String errorMessage = "Detected resolved migration not applied to database: "
-                        + x.getVersion().getVersion()
+                        + x.getVersion()
+                        .getVersion()
                         + ".\nTo ignore this migration, set -ignoreMigrationPatterns='*:ignored'. To allow executing this migration, set -outOfOrder=true.";
-                    return Pair.of(x, new ErrorDetails(CoreErrorCode.RESOLVED_VERSIONED_MIGRATION_NOT_APPLIED, errorMessage));
+                    return Pair.of(x,
+                        new ErrorDetails(CoreErrorCode.RESOLVED_VERSIONED_MIGRATION_NOT_APPLIED, errorMessage));
                 }
-                final String errorMessage = "Detected resolved repeatable migration not applied to database: " + x.getDescription() + ".\nTo ignore this migration, set -ignoreMigrationPatterns='*:ignored'.";
-                return Pair.of(x, new ErrorDetails(CoreErrorCode.RESOLVED_REPEATABLE_MIGRATION_NOT_APPLIED, errorMessage));
+                final String errorMessage = "Detected resolved repeatable migration not applied to database: "
+                    + x.getDescription()
+                    + ".\nTo ignore this migration, set -ignoreMigrationPatterns='*:ignored'.";
+                return Pair.of(x,
+                    new ErrorDetails(CoreErrorCode.RESOLVED_REPEATABLE_MIGRATION_NOT_APPLIED, errorMessage));
             })
-            .map(x -> new ValidateOutput(x.getLeft().getVersion().getVersion(),x.getLeft().getDescription(), x.getLeft().getPhysicalLocation(),x.getRight()))
+            .map(x -> new ValidateOutput(x.getLeft().getVersion().getVersion(),
+                x.getLeft().getDescription(),
+                x.getLeft().getPhysicalLocation(),
+                x.getRight()))
             .toList();
     }
 
-    private static List<ValidateOutput> getPendingVersionedMigrations(final List<MigrationInfo> migrations, boolean pendingIgnored) {
+    private static List<ValidateOutput> getPendingVersionedMigrations(final List<MigrationInfo> migrations,
+        boolean pendingIgnored) {
         return migrations.stream()
             .filter(x -> !pendingIgnored)
             .filter(x -> x.getState() == MigrationState.PENDING)
@@ -308,7 +342,8 @@ public class ValidateVerbExtension implements VerbExtension {
             .toList();
     }
 
-    private static List<ValidateOutput> getPendingRepeatableMigrations(final List<MigrationInfo> migrations, boolean pendingIgnored) {
+    private static List<ValidateOutput> getPendingRepeatableMigrations(final List<MigrationInfo> migrations,
+        boolean pendingIgnored) {
         return migrations.stream()
             .filter(x -> !pendingIgnored)
             .filter(x -> x.getState() == MigrationState.PENDING)
@@ -322,7 +357,8 @@ public class ValidateVerbExtension implements VerbExtension {
             .toList();
     }
 
-    private static List<ValidateOutput> getFailedVersionedMigrations(final List<MigrationInfo> migrations, boolean futureIgnored) {
+    private static List<ValidateOutput> getFailedVersionedMigrations(final List<MigrationInfo> migrations,
+        boolean futureIgnored) {
         return migrations.stream()
             .filter(x -> x.getState() == MigrationState.FAILED
                 || x.getState() == MigrationState.MISSING_FAILED
@@ -338,8 +374,7 @@ public class ValidateVerbExtension implements VerbExtension {
 
     private static List<ValidateOutput> getFailedRepeatableMigrations(final List<MigrationInfo> migrations) {
         return migrations.stream()
-            .filter(x -> x.getState() == MigrationState.FAILED
-                || x.getState() == MigrationState.MISSING_FAILED)
+            .filter(x -> x.getState() == MigrationState.FAILED || x.getState() == MigrationState.MISSING_FAILED)
             .filter(MigrationInfo::isRepeatable)
             .map(x -> new ValidateOutput("",
                 x.getDescription(),

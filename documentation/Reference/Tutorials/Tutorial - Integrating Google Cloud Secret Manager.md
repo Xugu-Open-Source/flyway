@@ -2,8 +2,6 @@
 subtitle: 'Tutorial: Integrating Google Cloud Secret Manager'
 ---
 
-# Tutorial: Integrating Google Cloud Secret Manager
-
 {% include enterprise.html %}
 
 This brief tutorial will teach you **how to integrate Google Cloud Secret Manager into your Flyway process**.
@@ -46,7 +44,7 @@ flyway.user=<database_user>
 flyway.password=<database_password>
 ```
 
-- Any necessary Google Cloud authentication - eg. a credentials file and environment variable pointing to it.
+- Any necessary Google Cloud authentication - for example: a credentials file and environment variable pointing to it.
 
 If we now execute the following Flyway command:
 

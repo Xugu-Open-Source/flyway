@@ -3,8 +3,6 @@ menu: faq
 subtitle: FAQ
 ---
 
-# Frequently Asked Questions
-
 - [I found a defect. Where should I report it?](#defect)
 - [I have a feature request. Where should I submit it?](#feature-request)
 - [I have a question. Where can I ask it?](#question)
@@ -188,7 +186,7 @@ An even better solution, in my opinion, is to have the same DB in prod and test.
 ## How do I rebuild a Schema history table
 
 <a name="rebuild-sht"></a>
-You may want to do this if your Schema history table has been accidentally dropped or if you have rebaselined your migrations and the previous deployment information is no longer applicable.
+You may want to do this if your Schema history table has been accidentally dropped or if you have re-baselined your migrations and the previous deployment information is no longer applicable.
 
 Steps:
 
@@ -215,4 +213,4 @@ For Hibernate 5.X see [this issue](https://github.com/flyway/flyway/issues/1981)
 ## How can I get process Flyway's output programmatically?
 
 <a name="programmatic"></a>
-Most of Flyway's output defaults to human-readable. By using the [outputType](<Command-line Parameters/Output Type Parameter>) switch, you can enable JSON format instead which will make programmatically interacting with the output much easier.
+Most of Flyway's output defaults to human-readable. By using the [`outputType`](<Command-line Parameters/Output Type Parameter>) switch, you can enable JSON format instead which will make programmatically interacting with the output much easier.
