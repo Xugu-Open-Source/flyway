@@ -34,7 +34,7 @@
         <module>flyway-sqlserver</module>
         <module>flyway-database-cassandra</module>
         <module>flyway-database-nc-mongodb</module>
-
+        <module>flyway-xugu</module>
 
 
 
