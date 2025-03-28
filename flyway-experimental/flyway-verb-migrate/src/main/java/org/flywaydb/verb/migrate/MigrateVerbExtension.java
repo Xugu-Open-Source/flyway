@@ -45,14 +45,14 @@ import org.flywaydb.core.internal.util.StringUtils;
 import org.flywaydb.core.internal.util.TimeFormat;
 import org.flywaydb.core.internal.util.ValidatePatternUtils;
 import org.flywaydb.nc.callbacks.CallbackManager;
-import org.flywaydb.verb.VerbUtils;
+import org.flywaydb.nc.VerbUtils;
 import org.flywaydb.verb.baseline.BaselineVerbExtension;
-import org.flywaydb.verb.info.ExperimentalMigrationInfoService;
+import org.flywaydb.nc.info.ExperimentalMigrationInfoService;
 import org.flywaydb.verb.migrate.migrators.ApiMigrator;
 import org.flywaydb.verb.migrate.migrators.ExecutableMigrator;
 import org.flywaydb.verb.migrate.migrators.JdbcMigrator;
 import org.flywaydb.verb.migrate.migrators.Migrator;
-import org.flywaydb.verb.preparation.PreparationContext;
+import org.flywaydb.nc.preparation.PreparationContext;
 import org.flywaydb.verb.schemas.SchemasVerbExtension;
 import org.flywaydb.verb.validate.ValidateVerbExtension;
 
@@ -85,10 +85,16 @@ public class MigrateVerbExtension implements VerbExtension {
         }
 
         if (!database.schemaHistoryTableExists(configuration.getTable())) {
-            final List<String> populatedSchemas = Arrays.stream(VerbUtils.getAllSchemasFromConfiguration(configuration))
+            final List<String> populatedSchemas = Arrays.stream(VerbUtils.getAllSchemas(configuration.getSchemas(), database.getDefaultSchema(configuration)))
                 .filter(database::isSchemaExists)
                 .filter(x -> !database.isSchemaEmpty(x))
                 .toList();
+
+            if (populatedSchemas.isEmpty() && configuration.isBaselineOnMigrate()) {
+                LOG.info("All configured schemas are empty; baseline operation skipped. "
+                    + "A baseline or migration script with a lower version than the baseline version may execute if available. Check the Schemas parameter if this is not intended.");
+            }
+
             if (!populatedSchemas.isEmpty() && !configuration.isSkipExecutingMigrations()) {
                 if (configuration.isBaselineOnMigrate()) {
                     new BaselineVerbExtension().executeVerb(configuration);
@@ -103,8 +109,7 @@ public class MigrateVerbExtension implements VerbExtension {
             }
         }
 
-        final CallbackManager callbackManager = new CallbackManager(context.getResources(),
-            configuration.isSkipDefaultCallbacks());
+        final CallbackManager callbackManager = new CallbackManager(configuration, context.getResources());
 
         database.createSchemaHistoryTableIfNotExists(configuration.getTable());
 
@@ -116,7 +121,7 @@ public class MigrateVerbExtension implements VerbExtension {
         final MigrationInfoService migrationInfoService = new ExperimentalMigrationInfoService(context.getMigrations(),
             configuration,
             database.getName(),
-            database.allSchemasEmpty(VerbUtils.getAllSchemasFromConfiguration(configuration)));
+            database.allSchemasEmpty(VerbUtils.getAllSchemas(configuration.getSchemas(), database.getDefaultSchema(configuration))));
 
         final MigrationInfo current = migrationInfoService.current();
         MigrationVersion initialSchemaVersion = current != null && current.isVersioned()

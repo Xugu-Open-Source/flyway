@@ -19,7 +19,8 @@
  */
 package org.flywaydb.verb.migrate.migrators;
 
-import static org.flywaydb.verb.VerbUtils.toMigrationText;
+import static org.flywaydb.core.internal.util.FileUtils.getParentDir;
+import static org.flywaydb.nc.VerbUtils.toMigrationText;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -41,12 +42,13 @@ import org.flywaydb.core.internal.util.Pair;
 import org.flywaydb.core.internal.util.StopWatch;
 import org.flywaydb.core.internal.util.StringUtils;
 import org.flywaydb.nc.callbacks.CallbackManager;
-import org.flywaydb.verb.ErrorUtils;
-import org.flywaydb.verb.executors.ExecutorFactory;
+import org.flywaydb.nc.ErrorUtils;
+import org.flywaydb.nc.executors.NonJdbcExecutorExecutionUnit;
+import org.flywaydb.nc.executors.ExecutorFactory;
 import org.flywaydb.verb.migrate.MigrationExecutionGroup;
-import org.flywaydb.verb.executors.Executor;
-import org.flywaydb.verb.readers.Reader;
-import org.flywaydb.verb.readers.ReaderFactory;
+import org.flywaydb.nc.executors.Executor;
+import org.flywaydb.nc.readers.Reader;
+import org.flywaydb.nc.readers.ReaderFactory;
 
 @CustomLog
 public class ApiMigrator extends Migrator {
@@ -146,7 +148,7 @@ public class ApiMigrator extends Migrator {
             executeInTransaction,
             experimentalDatabase,
             outOfOrder);
-        final Executor<String> executor = ExecutorFactory.getExecutor(experimentalDatabase, configuration);
+        final Executor<NonJdbcExecutorExecutionUnit> executor = ExecutorFactory.getExecutor(experimentalDatabase, configuration);
         final Reader<String> reader = ReaderFactory.getReader(experimentalDatabase, configuration);
 
         try {
@@ -170,12 +172,13 @@ public class ApiMigrator extends Migrator {
                 }
 
                 if (migrationInfo instanceof final LoadableMigrationInfo loadableMigrationInfo) {
-                    final String executionUnit = reader.read(configuration,
+                    final NonJdbcExecutorExecutionUnit nonJdbcExecutorExecutionUnit = new NonJdbcExecutorExecutionUnit(reader.read(configuration,
                         experimentalDatabase,
                         parsingContext,
                         loadableMigrationInfo.getLoadableResource(),
-                        null).findFirst().get();
-                    executor.execute(experimentalDatabase, executionUnit, configuration);
+                        null).findFirst().get(),
+                        getParentDir(loadableMigrationInfo.getLoadableResource().getAbsolutePath()));
+                    executor.execute(experimentalDatabase, nonJdbcExecutorExecutionUnit, configuration);
                     executor.finishExecution(experimentalDatabase, configuration);
                 }
 

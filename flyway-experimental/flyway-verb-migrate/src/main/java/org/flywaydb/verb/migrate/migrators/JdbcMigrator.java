@@ -19,7 +19,7 @@
  */
 package org.flywaydb.verb.migrate.migrators;
 
-import static org.flywaydb.verb.VerbUtils.toMigrationText;
+import static org.flywaydb.nc.VerbUtils.toMigrationText;
 
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -51,12 +51,12 @@ import org.flywaydb.core.internal.util.Pair;
 import org.flywaydb.core.internal.util.StopWatch;
 import org.flywaydb.core.internal.util.StringUtils;
 import org.flywaydb.nc.callbacks.CallbackManager;
-import org.flywaydb.verb.ErrorUtils;
-import org.flywaydb.verb.executors.Executor;
-import org.flywaydb.verb.executors.ExecutorFactory;
+import org.flywaydb.nc.ErrorUtils;
+import org.flywaydb.nc.executors.Executor;
+import org.flywaydb.nc.executors.ExecutorFactory;
 import org.flywaydb.verb.migrate.MigrationExecutionGroup;
-import org.flywaydb.verb.readers.Reader;
-import org.flywaydb.verb.readers.ReaderFactory;
+import org.flywaydb.nc.readers.Reader;
+import org.flywaydb.nc.readers.ReaderFactory;
 
 @CustomLog
 public class JdbcMigrator extends Migrator {
@@ -315,7 +315,7 @@ public class JdbcMigrator extends Migrator {
         final Configuration configuration,
         final LoadableMigrationInfo loadableMigrationInfo,
         final ParsingContext parsingContext) {
-        final Parser parser = experimentalDatabase.getParser().apply(configuration, parsingContext);
+        final Parser parser = (Parser) experimentalDatabase.getParser().apply(configuration, parsingContext);
         final SqlScriptMetadata metadata = loadableMigrationInfo.getSqlScriptMetadata();
         return parser.parse(loadableMigrationInfo.getLoadableResource(), metadata);
     }

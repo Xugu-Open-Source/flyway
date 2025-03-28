@@ -47,9 +47,9 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.configuration.Configuration;
+import org.flywaydb.core.experimental.AbstractExperimentalDatabase;
 import org.flywaydb.core.experimental.ConnectionType;
 import org.flywaydb.core.experimental.DatabaseSupport;
-import org.flywaydb.core.experimental.ExperimentalDatabase;
 import org.flywaydb.core.experimental.MetaData;
 import org.flywaydb.core.experimental.schemahistory.SchemaHistoryItem;
 import org.flywaydb.core.experimental.schemahistory.SchemaHistoryModel;
@@ -62,14 +62,11 @@ import org.flywaydb.core.internal.util.AsciiTable;
 import org.flywaydb.core.internal.util.DockerUtils;
 import org.flywaydb.core.internal.util.FileUtils;
 import org.flywaydb.core.internal.util.FlywayDbWebsiteLinks;
+import org.flywaydb.nc.executors.NonJdbcExecutorExecutionUnit;
 
-public class MongoDBDatabase implements ExperimentalDatabase {
+public class MongoDBDatabase extends AbstractExperimentalDatabase <NonJdbcExecutorExecutionUnit> {
     private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
-    private ArrayList<String> batch = new ArrayList<>();
-    private MetaData metaData;
-    private ConnectionType connectionType;
-
     private String schemaHistoryTableName = null;
     private MongoshCredential mongoshCredential = null;
     private ClientSession clientSession;
@@ -155,17 +152,18 @@ public class MongoDBDatabase implements ExperimentalDatabase {
                 .build());
         }
         mongoDatabase = mongoClient.getDatabase(getDefaultSchema(configuration));
+        currentSchema = mongoDatabase.getName();
         clientSession = mongoClient.startSession();
         schemaHistoryTableName = configuration.getTable();
         metaData = getDatabaseMetaData();
     }
 
     @Override
-    public void doExecute(final String executionUnit, final boolean outputQueryResults) {
+    public void doExecute(final NonJdbcExecutorExecutionUnit executionUnit, final boolean outputQueryResults) {
         switch (connectionType) {
             case API:
                 try {
-                    final Document result = mongoDatabase.runCommand(clientSession, BsonDocument.parse(executionUnit));
+                    final Document result = mongoDatabase.runCommand(clientSession, BsonDocument.parse(executionUnit.getScript()));
                     if (outputQueryResults) {
                         parseResults(result);
                     }
@@ -174,7 +172,7 @@ public class MongoDBDatabase implements ExperimentalDatabase {
                 }
                 return;
             case EXECUTABLE:
-                doExecuteWithMongosh(executionUnit, outputQueryResults);
+                doExecuteWithMongosh(executionUnit.getScript(), outputQueryResults);
                 return;
             default:
                 throw new FlywayException("No support for this connection type");
@@ -256,11 +254,6 @@ public class MongoDBDatabase implements ExperimentalDatabase {
     }
 
     @Override
-    public String getCurrentSchema() {
-        return mongoDatabase.getName();
-    }
-
-    @Override
     public Boolean allSchemasEmpty(final String[] schemas) {
         return Arrays.stream(schemas).filter(this::isSchemaExists).allMatch(this::isSchemaEmpty);
     }
@@ -322,16 +315,6 @@ public class MongoDBDatabase implements ExperimentalDatabase {
     public void doExecuteBatch() {
         mongoDatabase.runCommand(BsonDocument.parse(String.join(";", batch)));
         batch.clear();
-    }
-
-    @Override
-    public void addToBatch(final String executionUnit) {
-        batch.add(executionUnit);
-    }
-
-    @Override
-    public int getBatchSize() {
-        return batch.size();
     }
 
     @Override
