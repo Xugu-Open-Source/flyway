@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * flyway-verb-utils
  * ========================================================================
- * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * Copyright (C) 2010 - 2025 Red Gate Software Ltd
  * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,9 @@ public class VersionOrderMigrationComparator implements ExperimentalMigrationCom
                 || o2.getState() == MigrationState.BASELINE_IGNORED
                 || o2.getState() == MigrationState.BASELINE;
             if(o1BaselineOrdering && o2BaselineOrdering) {
+                if (o1.getState() == o2.getState()) {
+                    return o1.getVersion().compareTo(o2.getVersion());
+                }
                 return o1.getState().compareTo(o2.getState());
             }
 

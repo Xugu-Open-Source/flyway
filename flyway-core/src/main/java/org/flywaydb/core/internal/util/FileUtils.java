@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * flyway-core
  * ========================================================================
- * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * Copyright (C) 2010 - 2025 Red Gate Software Ltd
  * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -284,5 +284,21 @@ public class FileUtils {
                 Files.copy(path, destinationFilePath, REPLACE_EXISTING);
             }
         }
+    }
+
+    public static String readLine(final File file, final int lineNumber) {
+        try (final BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            int currentLineNumber = 0;
+            while ((line = reader.readLine()) != null) {
+                currentLineNumber++;
+                if (currentLineNumber == lineNumber) {
+                    return line;
+                }
+            }
+        } catch (IOException e) {
+            throw new FlywayException("Unable to read line " + lineNumber + " from " + file.getAbsolutePath(), e);
+        }
+        throw new FlywayException("Unable to read line " + lineNumber + " from " + file.getAbsolutePath());
     }
 }

@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * flyway-core
  * ========================================================================
- * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * Copyright (C) 2010 - 2025 Red Gate Software Ltd
  * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@
  */
 package org.flywaydb.core.extensibility;
 
+import org.flywaydb.core.FlywayTelemetryManager;
 import org.flywaydb.core.api.configuration.Configuration;
 
 public interface VerbExtension extends Plugin {
 
     boolean handlesVerb(String verb);
 
-    Object executeVerb(Configuration configuration);
+    Object executeVerb(Configuration configuration, FlywayTelemetryManager flywayTelemetryManager);
 }

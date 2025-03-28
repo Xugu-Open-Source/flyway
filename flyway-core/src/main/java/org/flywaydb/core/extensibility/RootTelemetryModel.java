@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * flyway-core
  * ========================================================================
- * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * Copyright (C) 2010 - 2025 Red Gate Software Ltd
  * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,10 @@ public class RootTelemetryModel {
     private String containerType;
     private String secretsManagementType;
     private String databaseHosting;
+    private boolean isExperimentalMode;
+    private String connectionType;
+    private String customParameters;
+    private boolean isLegacyMode;
 
     private Instant startTime = Instant.now();
 }

@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * flyway-core
  * ========================================================================
- * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * Copyright (C) 2010 - 2025 Red Gate Software Ltd
  * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public class ConfigurationValidator {
                                       CoreErrorCode.CONFIGURATION);
         }
 
-        if (ExperimentalModeUtils.isExperimentalModeActivated()
+        if (!ExperimentalModeUtils.canCreateDataSource(configuration)
           && !StringUtils.hasText(configuration.getUrl())) {
             String errorMessage = "Unable to connect to the database. A URL must be configured to use Experimental Mode!";
             throw new FlywayException(errorMessage, CoreErrorCode.CONFIGURATION);

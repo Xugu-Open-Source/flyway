@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * flyway-verb-repair
  * ========================================================================
- * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * Copyright (C) 2010 - 2025 Red Gate Software Ltd
  * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,12 @@
  */
 package org.flywaydb.verb.repair;
 
+import static org.flywaydb.core.experimental.ExperimentalModeUtils.logExperimentalDataTelemetry;
+
 import java.util.Arrays;
 import java.util.List;
 import lombok.CustomLog;
+import org.flywaydb.core.FlywayTelemetryManager;
 import org.flywaydb.core.api.CoreMigrationType;
 import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.MigrationInfo;
@@ -46,13 +49,15 @@ public class RepairVerbExtension implements VerbExtension {
     }
 
     @Override
-    public Object executeVerb(final Configuration configuration) {
+    public Object executeVerb(final Configuration configuration, FlywayTelemetryManager flywayTelemetryManager) {
         final ExperimentalDatabase experimentalDatabase;
         try {
             experimentalDatabase = VerbUtils.getExperimentalDatabase(configuration);
         } catch (final Exception e) {
             throw new FlywayException(e);
         }
+
+        logExperimentalDataTelemetry(flywayTelemetryManager, experimentalDatabase.getDatabaseMetaData());
 
         final RepairResult repairResult = new RepairResult(VersionPrinter.getVersion(), experimentalDatabase.getDatabaseMetaData().databaseName());
 

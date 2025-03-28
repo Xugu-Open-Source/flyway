@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * flyway-database-snowflake
  * ========================================================================
- * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * Copyright (C) 2010 - 2025 Red Gate Software Ltd
  * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,6 +85,10 @@ public class SnowflakeSchema extends Schema<SnowflakeDatabase, SnowflakeTable> {
             jdbcTemplate.execute(dropStatement);
         }
 
+        for (String dropStatement: generateDropStatements("STAGE")) {
+            jdbcTemplate.execute(dropStatement);
+        }
+
         for (Pair<String, String> snowflakeDropPair : generateDropStatementsWithArgs("USER FUNCTIONS", "FUNCTION")) {
             try {
                 jdbcTemplate.execute(snowflakeDropPair.getRight());
@@ -93,11 +97,11 @@ public class SnowflakeSchema extends Schema<SnowflakeDatabase, SnowflakeTable> {
             }
         }
 
-        for (Pair<String, String> snowflakeDropPair : generateDropStatementsWithArgs("PROCEDURES", "PROCEDURE")) {
+        for (Pair<String, String> snowflakeDropPair : generateDropStatementsWithArgs("USER PROCEDURES", "PROCEDURE")) {
             try {
                 jdbcTemplate.execute(snowflakeDropPair.getRight());
             } catch (SQLException sqlException) {
-                LOG.warn("Unable to drop Procedure " + snowflakeDropPair.getLeft() + ": " + sqlException.getMessage());
+                LOG.warn("Unable to drop User Procedure " + snowflakeDropPair.getLeft() + ": " + sqlException.getMessage());
             }
         }
     }

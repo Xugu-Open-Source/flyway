@@ -2,7 +2,7 @@
  * ========================LICENSE_START=================================
  * flyway-experimental-sqlite
  * ========================================================================
- * Copyright (C) 2010 - 2024 Red Gate Software Ltd
+ * Copyright (C) 2010 - 2025 Red Gate Software Ltd
  * ========================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -255,9 +255,14 @@ public class ExperimentalSqlite implements ExperimentalDatabase {
     @Override
     public boolean isSchemaEmpty(final String schema) {
         try (final Statement statement = connection.createStatement()) {
-            final ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM sqlite_master");
-            resultSet.next();
-            return resultSet.getInt(1) == 0;
+            final ResultSet resultSet = statement.executeQuery("SELECT tbl_name FROM sqlite_master WHERE type='table'");
+            final List<String> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(resultSet.getString(1));
+            }
+            final List<String> ignoredSystemTableNames = List.of("android_metadata", "sqlite_sequence");
+
+            return ignoredSystemTableNames.containsAll(result);
         } catch (final SQLException e) {
             throw new FlywayException(e);
         }
